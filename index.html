@@ -1,0 +1,1772 @@
+<!doctype html>
+<html lang="es">
+<meta charset="utf-8">
+<title>Panel del Gimnasio</title>
+<meta name="robots" content="noindex">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /*
+    Panel del profe. Mismo sistema que Mi cuota (ver DESIGN.md): lona, campana, rincón rojo,
+    Barlow Condensed para títulos y números, botones que se hunden como un pad.
+    Es una pantalla de trabajo: la decoración se queda en el cartel de arriba; el resto es denso y claro.
+  */
+  :root {
+    --ground: #e4e7ea; --surface: #ffffff; --surface-2: #eef0f3; --surface-3: #dfe3e9;
+    --line: #cfd4da; --line-soft: #e3e6ea;
+    --ink: #111418; --ink-mid: #4a525c; --ink-soft: #6e7681;
+    --lona: #1a5987; --lona-hondo: #123f61; --lona-ink: #ffffff; --lona-soft: rgba(26, 89, 135, .09);
+    --rincon: #b8261f; --campana: #e8a317; --cuerda: #f4f4f1;
+    --ok: #1d7442; --ok-bg: rgba(29, 116, 66, .11);
+    --warn: #8f5a15; --warn-bg: rgba(232, 163, 23, .2);
+    --bad: #a52f28; --bad-bg: rgba(184, 38, 31, .1);
+    --plata: #0f6b4f; --plata-bg: rgba(15, 107, 79, .1);
+    --wa: #0f8a45;
+    --shadow: 0 1px 0 var(--line);
+    --shadow-lg: 0 18px 50px rgba(10, 20, 30, .28);
+    --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0c1720; --surface: #14222e; --surface-2: #1a2b39; --surface-3: #22374a;
+      --line: #24384a; --line-soft: #1c2f3e;
+      --ink: #e9edf1; --ink-mid: #b1b9c2; --ink-soft: #8d96a0;
+      --lona: #2a73a8; --lona-hondo: #1b5680; --lona-ink: #ffffff; --lona-soft: rgba(99, 176, 224, .12);
+      --rincon: #c9352d;
+      --ok: #4dc57d; --ok-bg: rgba(77, 197, 125, .14);
+      --warn: #e8b04a; --warn-bg: rgba(232, 163, 23, .16);
+      --bad: #ff8a80; --bad-bg: rgba(234, 109, 99, .15);
+      --plata: #46c79b; --plata-bg: rgba(70, 199, 155, .13);
+      --wa: #3fcf7f; --shadow-lg: 0 18px 50px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0c1720; --surface: #14222e; --surface-2: #1a2b39; --surface-3: #22374a;
+    --line: #24384a; --line-soft: #1c2f3e;
+    --ink: #e9edf1; --ink-mid: #b1b9c2; --ink-soft: #8d96a0;
+    --lona: #2a73a8; --lona-hondo: #1b5680; --lona-ink: #ffffff; --lona-soft: rgba(99, 176, 224, .12);
+    --rincon: #c9352d;
+    --ok: #4dc57d; --ok-bg: rgba(77, 197, 125, .14);
+    --warn: #e8b04a; --warn-bg: rgba(232, 163, 23, .16);
+    --bad: #ff8a80; --bad-bg: rgba(234, 109, 99, .15);
+    --plata: #46c79b; --plata-bg: rgba(70, 199, 155, .13);
+    --wa: #3fcf7f; --shadow-lg: 0 18px 50px rgba(0,0,0,.6);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 0 16px 60px; overflow-x: hidden;
+    background: var(--ground); color: var(--ink);
+    font-family: var(--sans); font-size: 15.5px; line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 26px; }
+  strong { font-weight: 700; }
+
+  /* ---------- cartel de arriba: el afiche del gimnasio ---------- */
+  .cartel {
+    position: relative; margin: 0 calc(50% - 50vw); padding: 0 calc(50vw - 50%) 34px;
+    background: var(--lona); color: #fff; overflow: hidden;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 18px), 0 100%);
+  }
+  .cartel::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(rgba(0,0,0,.2) 1.3px, transparent 1.7px) 0 0 / 7px 7px;
+    -webkit-mask-image: linear-gradient(250deg, #000 0%, transparent 40%);
+            mask-image: linear-gradient(250deg, #000 0%, transparent 40%);
+  }
+  .cartel > * { position: relative; z-index: 1; }
+  .cuerdas { display: grid; gap: 6px; padding-top: 16px; margin-left: calc(50% - 50vw); }
+  .cuerdas i { display: block; height: 5px; border-radius: 0 3px 3px 0; box-shadow: 0 2px 0 rgba(0,0,0,.18); }
+  .cuerdas i:nth-child(1) { background: var(--rincon); }
+  .cuerdas i:nth-child(2) { background: var(--cuerda); }
+  .cuerdas i:nth-child(3) { background: var(--lona-hondo); }
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 14px 20px; flex-wrap: wrap; padding-top: 18px; }
+  h1 {
+    margin: 0; font-family: var(--display); font-weight: 900; text-transform: uppercase;
+    font-size: clamp(34px, 6vw, 52px); line-height: .9;
+  }
+  .sub { margin: 6px 0 0; font-size: 15px; opacity: .85; }
+  .cabecera-acciones { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .clock { font-family: var(--display); font-weight: 600; font-size: 16px; opacity: .85; font-variant-numeric: tabular-nums; margin-right: 4px; }
+  .cartel .btn { background: rgba(255,255,255,.1); border-color: rgba(255,255,255,.35); color: #fff; }
+  .cartel .btn:hover { background: rgba(255,255,255,.2); border-color: #fff; color: #fff; }
+  .cartel .btn.fuerte { --sombra: #6b4a06; background: var(--campana); border-color: var(--campana); color: #1a1407; }
+  .cartel .btn.fuerte:hover { color: #1a1407; }
+
+  .aviso { border-radius: 6px; padding: 11px 14px; font-size: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .aviso.demo { background: var(--surface); border: 2px dashed var(--line); color: var(--ink-mid); }
+  .aviso.error { background: var(--bad-bg); border: 2px solid var(--bad); color: var(--bad); font-weight: 600; }
+  .aviso b { color: var(--ink); font-weight: 700; }
+  .aviso.error b { color: inherit; }
+  .aviso .crece { flex: 1 1 200px; }
+  #avisos:empty { display: none; }
+
+  /* ---------- títulos de sección ---------- */
+  h2 {
+    margin: 0 0 10px; font-family: var(--display); font-weight: 800; font-size: 23px; line-height: 1.05;
+    text-transform: uppercase; color: var(--ink); display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  h2 .normal { font-family: var(--sans); text-transform: none; font-weight: 500; font-size: 14px; color: var(--ink-soft); }
+  .count {
+    background: var(--ink); color: var(--ground); border-radius: 4px; padding: 1px 7px 0;
+    font-family: var(--display); font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums;
+  }
+  .btn .count { background: var(--surface-2); color: var(--ink-mid); font-size: 14px; }
+  .btn.on .count { background: rgba(255,255,255,.22); color: inherit; }
+  .cap, .caja .celda .k, .fact .k, .campo label, thead th, .col-dia .nom {
+    font-family: var(--display); font-weight: 700; font-size: 14.5px; text-transform: uppercase; color: var(--ink-soft);
+  }
+
+  /* ---------- la plata del mes ---------- */
+  .caja { background: var(--surface); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+  .caja .cabeza { padding: 16px 18px 14px; display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+  .caja .grande {
+    font-family: var(--display); font-size: 64px; font-weight: 900; letter-spacing: -.02em; color: var(--ink);
+    font-variant-numeric: tabular-nums; line-height: .9; margin-top: 4px;
+  }
+  #cajaMeta { font-family: var(--display); font-size: 20px; font-weight: 800; color: var(--ink); }
+  /* La meta del mes como reloj: rayas que se van llenando. */
+  .track {
+    height: 18px; margin: 0 18px 14px; border-radius: 2px; overflow: hidden;
+    background: repeating-linear-gradient(90deg, var(--surface-3) 0 9px, transparent 9px 12px);
+  }
+  .track .fill {
+    height: 100%; background: repeating-linear-gradient(90deg, var(--plata) 0 9px, transparent 9px 12px);
+    transition: width .6s cubic-bezier(.2,.7,.2,1);
+  }
+  .caja .desglose { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); border-top: 2px solid var(--ink); }
+  .caja .celda { padding: 12px 18px 14px; border-right: 1px solid var(--line-soft); }
+  .caja .celda:last-child { border-right: none; }
+  .caja .celda .v { font-family: var(--display); font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; margin-top: 2px; }
+  .caja .celda .n { font-size: 13px; color: var(--ink-soft); margin-top: 3px; }
+  .caja .celda.bad { background: var(--bad-bg); }
+  .caja .celda.bad .v, .caja .celda.bad .k { color: var(--bad); }
+  .caja .celda.warn .v { color: var(--warn); }
+
+  /* ---------- contadores: apretado, el fondo es el estado (como el afiche) ---------- */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .tile {
+    --c: var(--ink); --sombra: var(--line);
+    background: var(--surface); border: 0; border-radius: 6px;
+    padding: 12px 14px; text-align: left; color: var(--ink);
+    display: flex; flex-direction: column; gap: 2px; cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 0 var(--sombra); margin-bottom: 4px; transition: transform .06s, box-shadow .06s;
+  }
+  .tile:active { transform: translateY(4px); box-shadow: 0 0 0 var(--sombra); }
+  .tile.ok { --c: var(--ok); } .tile.warn { --c: var(--campana); } .tile.bad { --c: var(--rincon); } .tile.mute { --c: var(--ink-soft); }
+  .tile .n { font-family: var(--display); font-size: 52px; font-weight: 900; line-height: .9; font-variant-numeric: tabular-nums; }
+  .tile .l { font-family: var(--display); font-weight: 700; font-size: 16px; text-transform: uppercase; color: var(--ink-mid); }
+  .tile.ok .n { color: var(--ok); } .tile.bad .n { color: var(--bad); } .tile.mute .n { color: var(--ink-soft); } .tile.warn .n { color: var(--warn); }
+  .tile[aria-pressed="true"] { background: var(--c); color: #fff; --sombra: rgba(0,0,0,.35); }
+  .tile[aria-pressed="true"] .n, .tile[aria-pressed="true"] .l { color: inherit; }
+  .tile.warn[aria-pressed="true"] { color: #1a1407; }
+  .tile[aria-pressed="true"]:not(.ok):not(.warn):not(.bad):not(.mute) { background: var(--lona); }
+
+  /* ---------- botones ---------- */
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .search { position: relative; flex: 1 1 260px; min-width: 190px; }
+  .search input {
+    width: 100%; min-height: 44px; padding: 9px 12px 9px 36px; font-family: inherit; font-size: 15.5px;
+    background: var(--surface); color: var(--ink); border: 2px solid var(--line); border-radius: 6px;
+  }
+  .search input:focus { border-color: var(--lona); outline: none; }
+  .search input::placeholder { color: var(--ink-soft); }
+  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink-soft); }
+  .btn {
+    --sombra: var(--line);
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 0 14px;
+    font-family: var(--display); font-size: 17px; font-weight: 700; text-transform: uppercase;
+    background: var(--surface); color: var(--ink); border: 2px solid var(--line); border-radius: 6px; cursor: pointer;
+    transition: border-color .12s, transform .06s, box-shadow .06s; white-space: nowrap; text-decoration: none;
+  }
+  .btn:hover { border-color: var(--ink); }
+  .btn.on { background: var(--ink); border-color: var(--ink); color: var(--ground); }
+  .btn.fuerte {
+    --sombra: var(--lona-hondo); background: var(--lona); border-color: var(--lona); color: var(--lona-ink); font-weight: 800;
+    box-shadow: 0 4px 0 var(--sombra); margin-bottom: 4px;
+  }
+  .btn.fuerte:hover { color: var(--lona-ink); filter: brightness(1.08); }
+  .btn.fuerte:active { transform: translateY(4px); box-shadow: 0 0 0 var(--sombra); }
+  .btn.peligro { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, transparent); }
+  .btn.peligro:hover { background: var(--rincon); border-color: var(--rincon); color: #fff; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; transform: none; }
+
+  /* ---------- a quién cobrarle hoy ---------- */
+  .cards { display: flex; flex-direction: column; gap: 6px; }
+  .card {
+    background: var(--surface); border: 0;
+    border-radius: 6px; padding: 0 16px 0 0; box-shadow: var(--shadow); overflow: hidden;
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    cursor: pointer; text-align: left; font-family: inherit; color: var(--ink); width: 100%;
+    transition: transform .1s;
+  }
+  .card:hover { transform: translateX(3px); }
+  /* La esquina del ring: el color del estado con los días adentro. */
+  .esquina {
+    flex: none; align-self: stretch; width: 74px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px 4px; background: var(--surface-3); color: var(--ink); font-family: var(--display); text-transform: uppercase; line-height: 1;
+  }
+  .esquina b { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .esquina small { font-size: 13px; font-weight: 700; margin-top: 2px; }
+  .card.bad .esquina { background: var(--rincon); color: #fff; }
+  .card.warn .esquina { background: var(--campana); color: #1a1407; }
+  .card.ok .esquina { background: var(--ok); color: #fff; }
+  .card .who { padding: 12px 0; }
+  .card .who { flex: 1 1 200px; min-width: 0; }
+  .card .name { font-family: var(--display); font-weight: 800; font-size: 21px; text-transform: uppercase; line-height: 1.05; }
+  .card .meta { font-size: 14px; color: var(--ink-mid); font-variant-numeric: tabular-nums; }
+  .card .amount { font-family: var(--display); font-weight: 800; font-size: 26px; font-variant-numeric: tabular-nums; min-width: 92px; text-align: right; }
+
+  .chip {
+    display: inline-block; padding: 3px 8px 2px; border-radius: 4px; white-space: nowrap;
+    font-family: var(--display); font-weight: 800; font-size: 14px; text-transform: uppercase; line-height: 1.15;
+  }
+  .chip.ok { background: var(--ok-bg); color: var(--ok); }
+  .chip.warn { background: var(--campana); color: #1a1407; }
+  .chip.bad { background: var(--rincon); color: #fff; }
+  .chip.mute { background: var(--surface-2); color: var(--ink-mid); }
+  .chip.plata { background: var(--plata-bg); color: var(--plata); }
+
+  /* ---------- tablas ---------- */
+  .scroller { overflow-x: auto; border-radius: 6px; background: var(--surface); box-shadow: var(--shadow); }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  thead th { text-align: left; padding: 11px 14px 9px; background: var(--surface); border-bottom: 2px solid var(--ink); white-space: nowrap; user-select: none; color: var(--ink-mid); }
+  thead th[data-sort] { cursor: pointer; }
+  thead th[data-sort]:hover { color: var(--ink); }
+  thead th .arrow { font-size: 11px; color: var(--lona); }
+  tbody tr[data-id] { cursor: pointer; }
+  tbody tr:hover { background: var(--surface-2); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .quiet { color: var(--ink-soft); font-size: 13px; }
+  .empty { padding: 30px; text-align: center; color: var(--ink-soft); font-size: 15px; }
+
+  .motivos { display: flex; flex-wrap: wrap; gap: 8px; }
+  .motivo { background: var(--surface); border-radius: 6px; padding: 9px 14px; box-shadow: var(--shadow); display: flex; align-items: baseline; gap: 9px; }
+  .motivo .m { font-size: 14.5px; color: var(--ink-mid); }
+  .motivo .c { font-family: var(--display); font-size: 26px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
+
+  /* ---------- la semana: cada día como un carnet ---------- */
+  .semana { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .col-dia { background: var(--surface); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; }
+  .col-dia .cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 7px 12px; background: var(--ink); color: var(--ground); }
+  .col-dia .nom { color: inherit; font-size: 16px; }
+  .col-dia .cant { font-family: var(--display); font-size: 24px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; color: var(--campana); }
+  .col-dia .cant.vacio { color: var(--ink-soft); }
+  .col-dia ul { margin: 0; padding: 8px 12px 10px; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+  .col-dia li { font-size: 14px; color: var(--ink-mid); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+  .col-dia li:hover { color: var(--lona); }
+  .col-dia li.debe { color: var(--bad); font-weight: 600; }
+  .col-dia li.debe::before { content: "● "; font-size: 10px; vertical-align: 2px; }
+  .col-dia .nadie { padding: 8px 12px 10px; font-size: 14px; color: var(--ink-soft); }
+
+  /* ---------- ficha del alumno y ventanas ---------- */
+  .scrim { position: fixed; inset: 0; background: rgba(6, 14, 22, .55); opacity: 0; pointer-events: none; transition: opacity .18s; z-index: 10; }
+  .scrim.open { opacity: 1; pointer-events: auto; }
+  .drawer {
+    position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 94vw);
+    background: var(--ground); box-shadow: var(--shadow-lg);
+    transform: translateX(105%); transition: transform .22s cubic-bezier(.2,.7,.2,1);
+    z-index: 11; overflow-y: auto; padding: 22px 20px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer .x, .modal .x { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; background: none; border: none; color: var(--ink-soft); font-size: 28px; cursor: pointer; line-height: 1; border-radius: 6px; }
+  .drawer .x:hover, .modal .x:hover { color: var(--ink); background: var(--surface-2); }
+  .dhead h3, .modal h3 { margin: 0; font-family: var(--display); font-weight: 900; font-size: 32px; line-height: .95; text-transform: uppercase; padding-right: 40px; }
+  .dhead .id { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fact { background: var(--surface); border-radius: 6px; padding: 10px 12px; box-shadow: var(--shadow); }
+  .fact .k { font-size: 13.5px; }
+  .fact .v { font-family: var(--display); font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; margin-top: 1px; }
+  .fact.full { grid-column: 1 / -1; }
+  .acts { display: flex; flex-direction: column; gap: 8px; }
+  .act {
+    --sombra: var(--line);
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; min-height: 50px;
+    padding: 0 14px; font-family: var(--display); font-size: 18px; font-weight: 800; text-transform: uppercase;
+    background: var(--surface); color: var(--ink); border: 2px solid var(--line);
+    border-radius: 6px; cursor: pointer; text-decoration: none; box-shadow: 0 4px 0 var(--sombra); margin-bottom: 4px;
+    transition: transform .06s, box-shadow .06s;
+  }
+  .act:active { transform: translateY(4px); box-shadow: 0 0 0 var(--sombra); }
+  .act:hover { border-color: var(--ink); }
+  .act.primary { --sombra: #0a5a2c; background: var(--wa); border-color: var(--wa); color: #fff; }
+  .act.verde { --sombra: var(--lona-hondo); background: var(--lona); border-color: var(--lona); color: #fff; }
+  .act.roja { color: var(--bad); }
+  .act.roja:hover { border-color: var(--rincon); }
+  .act .ico { font-size: 17px; }
+  .hist { display: flex; flex-direction: column; background: var(--surface); border-radius: 6px; padding: 0 12px; box-shadow: var(--shadow); }
+  .hist .row { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px dotted var(--line); font-size: 14.5px; font-variant-numeric: tabular-nums; }
+  .hist .row:last-child { border-bottom: none; }
+
+  .ronda-intro { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+  .ronda-intro .quiet { font-size: 14.5px; }
+  .ronda-botones { display: flex; gap: 8px; flex-wrap: wrap; }
+  .avisado { color: var(--ok); font-weight: 700; }
+  .ronda-cab { display: flex; justify-content: space-between; font-family: var(--display); font-size: 16px; font-weight: 700; text-transform: uppercase; color: var(--ink-soft); padding-right: 40px; font-variant-numeric: tabular-nums; }
+  .ronda-barra { height: 8px; border-radius: 2px; background: var(--surface-3); overflow: hidden; margin-top: -8px; }
+  .ronda-barra div { height: 100%; background: var(--lona); transition: width .25s ease; }
+  .ronda-quien { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .ronda-quien h3 { padding-right: 0; }
+  .ronda-monto { font-family: var(--display); font-size: 30px; font-weight: 900; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .burbuja {
+    white-space: pre-wrap; overflow-wrap: anywhere; font-size: 15px; line-height: 1.45;
+    background: color-mix(in srgb, #25d366 14%, var(--surface)); border-radius: 10px 10px 10px 3px;
+    padding: 12px 14px; max-height: 42vh; overflow-y: auto;
+  }
+  .ronda-pie .btn { min-height: 50px; }
+  .btn.fuerte.ronda-wa { flex: 1 1 200px; --sombra: #0a5a2c; background: var(--wa); border-color: var(--wa); }
+  .modal-caja { position: fixed; inset: 0; z-index: 12; display: none; align-items: center; justify-content: center; padding: 16px; }
+  .modal-caja.open { display: flex; }
+  .modal {
+    position: relative; background: var(--ground);
+    border-radius: 8px; box-shadow: var(--shadow-lg); width: min(500px, 100%);
+    max-height: 92vh; overflow-y: auto; padding: 22px;
+    display: flex; flex-direction: column; gap: 15px;
+  }
+  .modal h3 { font-size: 30px; }
+  .modal .pie { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+  .campos { display: flex; flex-direction: column; gap: 13px; }
+  .campo { display: flex; flex-direction: column; gap: 4px; }
+  .campo input, .campo select, .campo textarea {
+    min-height: 44px; padding: 9px 12px; font-family: inherit; font-size: 16px;
+    background: var(--surface); color: var(--ink); border: 2px solid var(--line); border-radius: 6px; width: 100%;
+  }
+  .campo input:focus, .campo select:focus, .campo textarea:focus { border-color: var(--lona); outline: none; }
+  .campo textarea { resize: vertical; min-height: 64px; }
+  .campo .ayuda { font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--ink-soft); text-transform: none; }
+  .fila2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .plan-fila { display: grid; grid-template-columns: 1fr 100px 64px; gap: 6px; margin-bottom: 6px; }
+  .dias { display: flex; gap: 6px; flex-wrap: wrap; }
+  .dia {
+    flex: 1 1 auto; min-width: 52px; min-height: 46px; padding: 0 6px;
+    font-family: var(--display); font-size: 17px; font-weight: 800; text-transform: uppercase;
+    background: var(--surface); color: var(--ink-soft); border: 2px dashed var(--line);
+    border-radius: 6px; cursor: pointer; transition: border-color .12s, color .12s, background .12s;
+  }
+  .dia:hover { border-color: var(--ink-soft); color: var(--ink); }
+  .dia.on { background: var(--ink); border: 2px solid var(--ink); color: var(--ground); }
+  .previo { background: var(--plata-bg); border-radius: 6px; padding: 12px 14px; font-size: 14.5px; color: var(--ink-mid); display: flex; flex-direction: column; gap: 3px; }
+  .previo .monto { font-family: var(--display); font-size: 36px; font-weight: 900; color: var(--plata); line-height: 1; font-variant-numeric: tabular-nums; }
+  .previo b { color: var(--ink); font-weight: 700; }
+
+  .toast {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%) translateY(90px);
+    background: var(--ink); color: var(--ground); padding: 10px 18px; border-radius: 6px;
+    font-family: var(--display); font-size: 18px; font-weight: 800; text-transform: uppercase;
+    z-index: 20; transition: transform .25s; box-shadow: var(--shadow-lg); max-width: 90vw; text-align: center;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  footer { border-top: 2px solid var(--ink); padding-top: 14px; font-size: 14px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 4px; }
+  footer b { color: var(--ink-mid); font-weight: 700; }
+  a { color: var(--lona); }
+  :focus-visible { outline: 3px solid var(--campana); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (max-width: 620px) {
+    body { padding: 0 12px 50px; }
+    .hide-sm { display: none; }
+    .tile .n { font-size: 42px; }
+    .caja .grande { font-size: 52px; }
+    .facts, .fila2 { grid-template-columns: 1fr; }
+    .cabecera-acciones { width: 100%; }
+    .cabecera-acciones .btn.fuerte { flex: 1 1 100%; order: -1; }
+    .clock { width: 100%; }
+  }
+</style>
+
+<div class="wrap">
+  <div class="cartel">
+  <div class="cuerdas" aria-hidden="true"><i></i><i></i><i></i></div>
+  <header>
+    <div>
+      <h1 id="titulo">Panel del Gimnasio</h1>
+      <p class="sub">Alumnos, plata y cobranza — en un solo lugar.</p>
+    </div>
+    <div class="cabecera-acciones">
+      <span class="clock" id="clock"></span>
+      <button class="btn fuerte" id="btnNuevo">＋ Nuevo alumno</button>
+      <button class="btn" id="btnPago">Registrar pago</button>
+      <button class="btn" id="btnConfig" title="Configuración">⚙︎</button>
+    </div>
+  </header>
+  </div>
+
+  <div id="avisos"></div>
+
+  <section>
+    <h2>La plata de este mes</h2>
+    <div class="caja">
+      <div class="cabeza">
+        <div>
+          <div class="cap">Recaudado en <span id="mesNombre">el mes</span></div>
+          <div class="grande" id="cajaTotal">$0</div>
+        </div>
+        <div style="text-align:right">
+          <div class="cap">Meta del mes</div>
+          <div id="cajaMeta">$0</div>
+        </div>
+      </div>
+      <div class="track"><div class="fill" id="cajaFill" style="width:0%"></div></div>
+      <div class="desglose" id="cajaDesglose"></div>
+    </div>
+  </section>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section id="atencion"></section>
+
+  <section id="semana"></section>
+
+  <section id="prorrateos"></section>
+
+  <section>
+    <h2>Alumnos <span class="count" id="cntTodos">0</span></h2>
+    <div class="toolbar">
+      <div class="search">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+        <input id="q" type="search" placeholder="Buscar por nombre o teléfono..." autocomplete="off">
+      </div>
+      <button class="btn on" data-filtro="activos">Activos</button>
+      <button class="btn" data-filtro="aldia">Al día</button>
+      <button class="btn" data-filtro="porvencer">Por vencer</button>
+      <button class="btn" data-filtro="vencido">Vencidos</button>
+      <button class="btn" data-filtro="baja">Dados de baja</button>
+      <button class="btn" data-filtro="todos">Todos</button>
+      <span id="filtrosPlan"></span>
+      <button class="btn" id="csv">Descargar CSV</button>
+    </div>
+    <div class="scroller" style="margin-top:10px">
+      <table>
+        <thead><tr>
+          <th data-sort="nombre">Alumno <span class="arrow"></span></th>
+          <th data-sort="estado">Estado <span class="arrow"></span></th>
+          <th data-sort="plan">Plan y días <span class="arrow"></span></th>
+          <th data-sort="vence">Vence <span class="arrow"></span></th>
+          <th data-sort="monto" class="hide-sm">Paga al mes <span class="arrow"></span></th>
+          <th data-sort="antiguedad" class="hide-sm">Socio desde <span class="arrow"></span></th>
+          <th data-sort="pagado" class="hide-sm">Ha pagado <span class="arrow"></span></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="bajas"></section>
+
+  <section>
+    <h2>Últimos pagos</h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Fecha</th><th>Alumno</th><th>Monto</th><th>Cómo pagó</th><th>Estado</th><th class="hide-sm">Cubre hasta</th></tr></thead>
+        <tbody id="tpagos"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span>Los avisos de cobro salen solos a las <b>09:00</b> por WhatsApp, a cada uno por interno: <b>5 días antes</b> de que venza la membresía, <b>1 día antes</b> (mañana ya no puede entrar) y, si no paga, día por medio hasta que pague.</span>
+    <span>Cuando el pago por Mercado Pago se acredita, la membresía se renueva sola: <b>nadie revisa la cartola</b>. Los pagos en efectivo se registran acá con el botón <b>Registrar pago</b>.</span>
+    <span id="pieModo"></span>
+  </footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Ficha del alumno"></aside>
+<div class="modal-caja" id="modalCaja"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------- configuración ---------- */
+
+const CFG_DEF = {
+  gym: "Panel del Gimnasio",
+  mensualidad: 40000,
+  corte: 10,
+  servidor: "",
+  clave: "",
+  paisTel: "56",
+  edadMinima: 14,
+  planes: [
+    { id: "p3", nombre: "3 veces por semana", precio: 40000, dias: 3, detalle: "12 días al mes" },
+    { id: "p8", nombre: "8 días al mes", precio: 30000, dias: 2, detalle: "2 días fijos por semana" }
+  ]
+};
+
+const DIAS_SEMANA = [
+  { id: "lun", corto: "Lun", largo: "lunes" },
+  { id: "mar", corto: "Mar", largo: "martes" },
+  { id: "mie", corto: "Mié", largo: "miércoles" },
+  { id: "jue", corto: "Jue", largo: "jueves" },
+  { id: "vie", corto: "Vie", largo: "viernes" },
+  { id: "sab", corto: "Sáb", largo: "sábado" }
+];
+let CFG = cargarCfg();
+
+function cargarCfg() {
+  try {
+    const g = JSON.parse(localStorage.getItem("gym.cfg") || "{}");
+    const c = Object.assign({}, CFG_DEF, g);
+    // Quien nunca tocó el servidor arranca conectado; quien lo vació a propósito
+    // se queda en la demostración, que sirve para mostrarle el panel a un cliente.
+    c.servidor = "";
+    return c;
+  } catch (e) { return Object.assign({}, CFG_DEF); }
+}
+function guardarCfg() { localStorage.setItem("gym.cfg", JSON.stringify(CFG)); }
+
+const MOTIVOS = [
+  "No pagó",
+  "Se cambió de gimnasio",
+  "Lesión",
+  "Se mudó de ciudad",
+  "No le calzó el horario",
+  "Otro"
+];
+
+/* ---------- planes y días ---------- */
+
+function planes() { return (CFG.planes && CFG.planes.length) ? CFG.planes : CFG_DEF.planes; }
+function planPorId(id) {
+  const l = planes();
+  return l.find(p => p.id === id) || l[0];
+}
+function nombrePlan(id) { const p = planPorId(id); return p ? p.nombre : "—"; }
+function precioPlan(id) { const p = planPorId(id); return p ? Number(p.precio) : Number(CFG.mensualidad); }
+function diasDelPlan(id) { const p = planPorId(id); return p ? Number(p.dias) : 0; }
+
+function listaDias(v) {
+  if (Array.isArray(v)) return v.slice();
+  return String(v || "").split(/[,;\s]+/).filter(x => x);
+}
+function textoDias(v) {
+  const l = listaDias(v);
+  if (!l.length) return "sin días asignados";
+  return l.map(id => { const d = DIAS_SEMANA.find(x => x.id === id); return d ? d.corto : id; }).join(" · ");
+}
+function edad(nacimiento) {
+  const n = valida(nacimiento);
+  if (!n) return null;
+  let a = HOY.getFullYear() - n.getFullYear();
+  const m = HOY.getMonth() - n.getMonth();
+  if (m < 0 || (m === 0 && HOY.getDate() < n.getDate())) a--;
+  return a;
+}
+
+/* ---------- utilidades ---------- */
+
+const HOY = new Date(); HOY.setHours(0,0,0,0);
+const DIAS_SEM = ["dom","lun","mar","mié","jue","vie","sáb"];
+const MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+const d = s => { const p = String(s).split("-").map(Number); return new Date(p[0], p[1]-1, p[2]); };
+const iso = dt => dt.getFullYear() + "-" + String(dt.getMonth()+1).padStart(2,"0") + "-" + String(dt.getDate()).padStart(2,"0");
+const dias = f => Math.round((d(f) - HOY) / 86400000);
+const diasEntre = (a, b) => Math.round((b - a) / 86400000);
+const limpia = s => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const fmt = f => { const x = d(f); return String(x.getDate()).padStart(2,"0")+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+x.getFullYear(); };
+const corto = f => { const x = d(f); return String(x.getDate()).padStart(2,"0")+"-"+String(x.getMonth()+1).padStart(2,"0"); };
+const plata = n => "$" + Number(n||0).toLocaleString("es-CL");
+const plural = (n, s, p) => n === 1 ? ("1 " + s) : (n + " " + p);
+const esc = v => String(v == null ? "" : v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const antig = m => m === null ? "—" : (m === 0 ? "recién entró" : plural(m, "mes", "meses"));
+const orderDias = a => a.est.dias === null ? 99999 : a.est.dias;
+
+function tel(t) {
+  const s = String(t || "").replace(/\D/g, "");
+  if (!s) return "sin teléfono";
+  if (s.length !== 11) return "+" + s;
+  return "+" + s.slice(0,2) + " " + s.slice(2,3) + " " + s.slice(3,7) + " " + s.slice(7);
+}
+function telNormal(t) {
+  let s = String(t || "").replace(/\D/g, "");
+  if (!s) return "";
+  if (s.length === 8) s = "9" + s;
+  if (s.length === 9 && s[0] === "9") s = CFG.paisTel + s;
+  return s;
+}
+function valida(f) {
+  if (!f) return null;
+  const x = d(String(f));
+  return isNaN(x.getTime()) ? null : x;
+}
+function meses(ini) {
+  const a = valida(ini);
+  if (!a) return null;
+  let m = (HOY.getFullYear()-a.getFullYear())*12 + (HOY.getMonth()-a.getMonth());
+  if (HOY.getDate() < a.getDate()) m--;
+  return Math.max(0, m);
+}
+
+/* prorrateo hacia adelante hasta el próximo día de corte */
+function prorrateo(fechaIni, mensualidad) {
+  const ini = valida(fechaIni);
+  if (!ini) return null;
+  const c = Number(CFG.corte) || 10;
+  const men = Number(mensualidad) || Number(CFG.mensualidad) || 0;
+  const proximo = new Date(ini.getFullYear(), ini.getMonth(), c);
+  if (ini.getDate() >= c) proximo.setMonth(proximo.getMonth() + 1);
+  const anterior = new Date(proximo.getFullYear(), proximo.getMonth(), c);
+  anterior.setMonth(anterior.getMonth() - 1);
+  const ciclo = diasEntre(anterior, proximo);
+  const cubre = diasEntre(ini, proximo);
+  const exacto = ciclo > 0 ? men * cubre / ciclo : men;
+  const monto = Math.max(0, Math.round(exacto / 1000) * 1000);
+  return { monto: monto, cubre: cubre, ciclo: ciclo, hasta: iso(proximo), completo: men, parcial: cubre < ciclo };
+}
+
+/* ---------- estado ---------- */
+
+let ALUMNOS = [], PAGOS = [], MODO = "demo", ULTIMO_ERROR = "";
+let enriquecidos = [];
+let filtro = "activos", busca = "", orden = { campo: "vence", asc: true };
+
+function esBaja(a) { return String(a.estado || "activo").toLowerCase() === "baja"; }
+
+function estado(a) {
+  if (esBaja(a)) return { k: "baja", txt: "Dado de baja", cls: "mute", dias: null };
+  if (!valida(a.ven)) return { k: "sinfecha", txt: "Sin fecha", cls: "mute", dias: null };
+  const k = dias(a.ven);
+  if (k < 0) return { k: "vencido", txt: "Vencido", cls: "bad", dias: k };
+  if (k <= 5) return { k: "porvencer", txt: k === 0 ? "Vence hoy" : k === 1 ? "Vence mañana" : "Por vencer", cls: "warn", dias: k };
+  return { k: "aldia", txt: "Al día", cls: "ok", dias: k };
+}
+
+function calcular() {
+  enriquecidos = ALUMNOS.map(a => {
+    const e = estado(a);
+    const monto = Number(a.m) || 0;
+    const cuotas = Number(a.pagos) || 0;
+    const ciclos = (e.dias === null || e.k !== "vencido") ? (e.k === "porvencer" ? 1 : 0)
+      : 1 + Math.floor(Math.abs(e.dias) / 30);
+    const debe = e.k === "baja" ? 0 : ciclos * monto;
+    return Object.assign({}, a, {
+      m: monto,
+      pagos: cuotas,
+      n: String(a.n || "(sin nombre)"),
+      t: String(a.t || ""),
+      est: e,
+      plan: a.plan || planes()[0].id,
+      dias: listaDias(a.dias),
+      mensual: Number(a.mensual) || precioPlan(a.plan),
+      edad: edad(a.nace),
+      baja: esBaja(a),
+      sinTelefono: !telNormal(a.t),
+      antiguedad: meses(a.ini),
+      totalPagado: PAGOS.filter(p => p.id === a.id && p.e === "approved").reduce((s,p) => s + Number(p.m||0), 0) || cuotas * monto,
+      ciclosDebe: e.k === "baja" ? 0 : ciclos,
+      debe: debe
+    });
+  });
+}
+
+function activos() { return enriquecidos.filter(a => !a.baja); }
+function mesActual() { return iso(HOY).slice(0,7); }
+
+/* ---------- pintado ---------- */
+
+function pintarAvisos() {
+  const box = document.getElementById("avisos");
+  let h = "";
+  if (MODO === "demo") {
+    h += `<div class="aviso demo"><span class="crece"><b>Modo demostración.</b> Los alumnos y pagos son inventados y todo lo que hagas se guarda solo en este navegador. Conecta el servidor en ⚙︎ para trabajar con los datos de verdad.</span><button class="btn" id="btnConectar">Conectar servidor</button></div>`;
+  }
+  if (ULTIMO_ERROR) {
+    h += `<div class="aviso error">${esc(ULTIMO_ERROR)}</div>`;
+  }
+  box.innerHTML = h;
+  const b = document.getElementById("btnConectar");
+  if (b) b.onclick = abrirConfig;
+}
+
+function pintarCaja() {
+  const mes = mesActual();
+  const todosDelMes = PAGOS.filter(p => p.e === "approved" && String(p.f).slice(0,7) === mes);
+  const canjes = todosDelMes.filter(p => (p.via||"") === "canje");
+  const delMes = todosDelMes.filter(p => (p.via||"") !== "canje");
+  const total = delMes.reduce((s,p) => s + Number(p.m||0), 0);
+  const efectivo = delMes.filter(p => (p.via||"") === "efectivo").reduce((s,p) => s + Number(p.m||0), 0);
+  const transf = delMes.filter(p => (p.via||"") === "transferencia").reduce((s,p) => s + Number(p.m||0), 0);
+  const online = total - efectivo - transf;
+  const enCanjes = canjes.reduce((s,p) => s + Number(p.m||0), 0);
+  const act = activos();
+  const meta = act.reduce((s,a) => s + (Number(a.mensual) || Number(CFG.mensualidad) || a.m), 0);
+  const porCobrar = act.reduce((s,a) => s + a.debe, 0);
+  const vencidos = act.filter(a => a.est.k === "vencido");
+  const deudaVieja = vencidos.filter(a => a.ciclosDebe > 1).reduce((s,a) => s + a.debe - a.m, 0);
+
+  document.getElementById("mesNombre").textContent = MESES[HOY.getMonth()];
+  document.getElementById("cajaTotal").textContent = plata(total);
+  document.getElementById("cajaMeta").textContent = plata(meta) + " si pagan todos";
+  const pct = meta ? Math.min(100, Math.round(total/meta*100)) : 0;
+  document.getElementById("cajaFill").style.width = pct + "%";
+  document.getElementById("cajaDesglose").innerHTML = `
+    <div class="celda"><div class="k">En efectivo</div><div class="v">${plata(efectivo)}</div><div class="n">${plural(delMes.filter(p => (p.via||"") === "efectivo").length, "pago", "pagos")} en caja</div></div>
+    <div class="celda"><div class="k">Por transferencia</div><div class="v">${plata(transf)}</div><div class="n">${plural(delMes.filter(p => (p.via||"") === "transferencia").length, "pago", "pagos")}</div></div>
+    <div class="celda"><div class="k">Por Mercado Pago</div><div class="v">${plata(online)}</div><div class="n">se acredita solo</div></div>
+    ${enCanjes > 0 ? `<div class="celda"><div class="k">En canjes</div><div class="v">${plata(enCanjes)}</div><div class="n">${plural(canjes.length, "canje", "canjes")} · no es plata en caja</div></div>` : ""}
+    <div class="celda ${porCobrar > 0 ? "bad" : ""}"><div class="k">Falta por cobrar</div><div class="v">${plata(porCobrar)}</div><div class="n">${plural(act.filter(a => a.debe > 0).length, "persona", "personas")}${deudaVieja > 0 ? " · " + plata(deudaVieja) + " de meses viejos" : ""}</div></div>`;
+}
+
+function pintarTiles() {
+  const act = activos();
+  const c = { aldia:0, porvencer:0, vencido:0, sinfecha:0 };
+  act.forEach(a => { c[a.est.k] = (c[a.est.k] || 0) + 1; });
+  const bajas = enriquecidos.filter(a => a.baja).length;
+  const tiles = [
+    { f:"activos", cls:"", n:act.length, l:"Alumnos activos" },
+    { f:"aldia", cls:"ok", n:c.aldia, l:"Al día" },
+    { f:"porvencer", cls:"warn", n:c.porvencer, l:"Por vencer" },
+    { f:"vencido", cls:"bad", n:c.vencido, l:"Vencidos" },
+    { f:"baja", cls:"mute", n:bajas, l:"Dados de baja" }
+  ];
+  document.getElementById("tiles").innerHTML = tiles.map(t =>
+    `<button class="tile ${t.cls}" data-filtro="${t.f}" aria-pressed="${filtro===t.f}"><span class="n">${t.n}</span><span class="l">${t.l}</span></button>`
+  ).join("");
+}
+
+function pintarAtencion() {
+  const urg = activos().filter(a => a.est.k === "vencido" || a.est.k === "porvencer" || a.est.k === "sinfecha" || a.sinTelefono)
+    .sort((x,y) => orderDias(x) - orderDias(y));
+  const el = document.getElementById("atencion");
+  if (!urg.length) {
+    el.innerHTML = `<h2>Hay que cobrarles hoy</h2><div class="scroller"><div class="empty">Nadie debe nada. Todos al día.</div></div>`;
+    return;
+  }
+  const tocan = urg.filter(tocaHoy).length;
+  el.innerHTML = `<div class="ronda-intro">
+      <div><h2 style="margin:0">Hay que cobrarles hoy <span class="count">${urg.length}</span></h2>
+      <span class="quiet">${tocan ? "A cada uno por interno, con su link para pagar. Nada en el grupo." : "Ya les avisaste a todos. Mañana se arma la lista sola."}</span></div>
+      <div class="ronda-botones"><button class="btn" id="btnGrupo">Aviso para el grupo</button>
+      <button class="btn fuerte" id="btnRonda"${tocan ? "" : " disabled"}>${tocan ? "Avisar a " + plural(tocan, "persona", "personas") : "Nadie por avisar hoy"}</button></div>
+    </div><div class="cards">` +
+    urg.map(a => {
+      const k = a.est.dias;
+      const detalle = a.est.k === "sinfecha" ? "Sin fecha de vencimiento — hay que completarla"
+        : k < 0 ? `Venció el ${corto(a.ven)} · hace ${plural(Math.abs(k), "día", "días")}${a.ciclosDebe > 1 ? " · debe " + plural(a.ciclosDebe, "mes", "meses") : ""}`
+        : k === 0 ? "Vence hoy" : `Vence el ${corto(a.ven)} · en ${plural(k, "día", "días")}`;
+      const extra = a.sinTelefono ? ` · <b>sin teléfono, no se le puede escribir</b>` : textoAvisado(a) ? ` · <span class="avisado">✓ ${textoAvisado(a)}</span>` : "";
+      const esquina = a.est.k === "sinfecha" ? ["?", "sin fecha"] : k < 0 ? [Math.abs(k), Math.abs(k) === 1 ? "día atraso" : "días atraso"]
+        : k === 0 ? ["Hoy", "vence"] : [k, k === 1 ? "día" : "días"];
+      return `<button class="card ${a.est.cls}" data-id="${esc(a.id)}"><span class="esquina" aria-hidden="true"><b>${esquina[0]}</b><small>${esquina[1]}</small></span><span class="who"><span class="name">${esc(a.n)}</span><br><span class="meta">${detalle}${extra}</span></span><span class="chip ${a.est.cls}">${a.est.txt}</span><span class="amount">${plata(a.debe || a.m)}</span></button>`;
+    }).join("") + `</div>`;
+  document.getElementById("btnRonda").onclick = abrirRonda;
+  document.getElementById("btnGrupo").onclick = abrirAvisoGrupo;
+}
+
+function pintarSemana() {
+  const act = activos();
+  const el = document.getElementById("semana");
+  const conDias = act.filter(a => a.dias.length);
+  if (!conDias.length) {
+    el.innerHTML = `<h2>Cómo queda la semana <span class="normal">todavía nadie tiene días asignados</span></h2>`;
+    return;
+  }
+  const sinDias = act.length - conDias.length;
+  el.innerHTML = `<h2>Cómo queda la semana <span class="normal">cuánta gente le toca cada día${sinDias ? " · " + plural(sinDias, "alumno sin días", "alumnos sin días") : ""}</span></h2>
+    <div class="semana">${DIAS_SEMANA.map(d => {
+      const suyos = conDias.filter(a => a.dias.indexOf(d.id) >= 0)
+        .sort((x, y) => limpia(x.n).localeCompare(limpia(y.n)));
+      return `<div class="col-dia">
+        <div class="cab"><span class="nom">${d.largo}</span><span class="cant ${suyos.length ? "" : "vacio"}">${suyos.length}</span></div>
+        ${suyos.length
+          ? `<ul>${suyos.map(a => `<li data-id="${esc(a.id)}" class="${a.debe > 0 ? "debe" : ""}" title="${esc(a.n)}${a.debe > 0 ? " · debe " + plata(a.debe) : ""}">${esc(a.n)}</li>`).join("")}</ul>`
+          : `<span class="nadie">nadie</span>`}
+      </div>`;
+    }).join("")}</div>`;
+}
+
+function pintarProrrateos() {
+  const mes = mesActual();
+  const nuevos = activos().filter(a => String(a.ini || "").slice(0,7) === mes)
+    .sort((x,y) => String(x.ini).localeCompare(String(y.ini)));
+  const el = document.getElementById("prorrateos");
+  if (!nuevos.length) {
+    el.innerHTML = `<h2>Entraron este mes <span class="normal">nadie todavía</span></h2>`;
+    return;
+  }
+  const suma = nuevos.reduce((s,a) => s + a.m, 0);
+  const sumaCompleta = nuevos.reduce((s,a) => s + (Number(a.mensual) || Number(CFG.mensualidad)), 0);
+  el.innerHTML = `<h2>Entraron este mes <span class="count">${nuevos.length}</span> <span class="normal">pagan solo los días que usan, hasta el ${CFG.corte}</span></h2>
+    <div class="scroller">
+      <table>
+        <thead><tr><th>Alumno</th><th>Entró</th><th>Días que paga</th><th>Cobrado ahora</th><th class="hide-sm">Desde el próximo mes</th></tr></thead>
+        <tbody>${nuevos.map(a => {
+          const pr = prorrateo(a.ini, a.mensual || CFG.mensualidad);
+          const men = Number(a.mensual) || Number(CFG.mensualidad);
+          return `<tr data-id="${esc(a.id)}">
+            <td><strong>${esc(a.n)}</strong></td>
+            <td class="num">${fmt(a.ini)}</td>
+            <td class="num">${pr ? pr.cubre + " de " + pr.ciclo : "—"}<div class="quiet">${pr && pr.parcial ? "prorrateo" : "mes completo"}</div></td>
+            <td class="num"><strong>${plata(a.m)}</strong></td>
+            <td class="num hide-sm quiet">${plata(men)}</td>
+          </tr>`;
+        }).join("")}
+        <tr><td colspan="3" style="text-align:right"><strong>Total que entró por estas altas</strong></td><td class="num"><strong>${plata(suma)}</strong></td><td class="num hide-sm quiet">${plata(sumaCompleta)}</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function pasa(a) {
+  if (filtro === "activos" && a.baja) return false;
+  if (filtro === "baja" && !a.baja) return false;
+  if (filtro.indexOf("plan:") === 0 && (a.baja || a.plan !== filtro.slice(5))) return false;
+  if (["aldia","porvencer","vencido"].indexOf(filtro) >= 0 && a.est.k !== filtro) return false;
+  if (busca) {
+    const b = limpia(busca.trim());
+    const digitos = busca.replace(/\D/g, "");
+    const porNombre = b.length > 0 && limpia(a.n).indexOf(b) >= 0;
+    const porTelefono = digitos.length >= 3 && a.t.indexOf(digitos) >= 0;
+    if (!porNombre && !porTelefono) return false;
+  }
+  return true;
+}
+
+function pintarFiltrosPlan() {
+  const cont = document.getElementById("filtrosPlan");
+  const act = activos();
+  cont.innerHTML = planes().map(p => {
+    const n = act.filter(a => a.plan === p.id).length;
+    return `<button class="btn${filtro === "plan:" + p.id ? " on" : ""}" data-filtro="plan:${esc(p.id)}">${esc(p.nombre)} <span class="count">${n}</span></button>`;
+  }).join(" ");
+}
+
+function pintarTabla() {
+  pintarFiltrosPlan();
+  const lista = enriquecidos.filter(pasa).sort((x,y) => {
+    let a, b;
+    switch (orden.campo) {
+      case "nombre": a = limpia(x.n); b = limpia(y.n); break;
+      case "estado": a = orderDias(x); b = orderDias(y); break;
+      case "plan": a = nombrePlan(x.plan) + textoDias(x.dias); b = nombrePlan(y.plan) + textoDias(y.dias); break;
+      case "monto": a = x.m; b = y.m; break;
+      case "antiguedad": a = -(x.antiguedad == null ? -1 : x.antiguedad); b = -(y.antiguedad == null ? -1 : y.antiguedad); break;
+      case "pagado": a = -x.totalPagado; b = -y.totalPagado; break;
+      default: a = orderDias(x); b = orderDias(y);
+    }
+    if (a < b) return orden.asc ? -1 : 1;
+    if (a > b) return orden.asc ? 1 : -1;
+    return 0;
+  });
+  document.getElementById("cntTodos").textContent = lista.length;
+  const tb = document.getElementById("tbody");
+  if (!lista.length) {
+    tb.innerHTML = `<tr><td colspan="7"><div class="empty">${busca ? "Ningún alumno coincide con la búsqueda." : "Todavía no hay alumnos acá. Usa ＋ Nuevo alumno."}</div></td></tr>`;
+    return;
+  }
+  tb.innerHTML = lista.map(a => {
+    const k = a.est.dias;
+    const cuando = k === null ? "" : (k < 0 ? "hace " + Math.abs(k) + " d" : k === 0 ? "hoy" : "en " + k + " d");
+    const men = Number(a.mensual) || Number(CFG.mensualidad);
+    return `<tr data-id="${esc(a.id)}">
+      <td><strong>${esc(a.n)}</strong><div class="quiet">${tel(a.t)}</div></td>
+      <td><span class="chip ${a.est.cls}">${a.est.txt}</span>${a.baja && a.motivo ? `<div class="quiet">${esc(a.motivo)}</div>` : ""}</td>
+      <td>${esc(nombrePlan(a.plan))}<div class="quiet">${textoDias(a.dias)}</div></td>
+      <td class="num">${a.baja ? (a.fechaBaja ? fmt(a.fechaBaja) : "—") : (k === null ? "—" : fmt(a.ven))}<div class="quiet">${a.baja ? "fecha de baja" : cuando}</div></td>
+      <td class="num hide-sm">${plata(a.m)}${a.m > 0 && a.m < men ? `<div class="quiet">prorrateo</div>` : ""}</td>
+      <td class="num hide-sm">${a.ini ? fmt(a.ini) : "—"}<div class="quiet">${antig(a.antiguedad)}</div></td>
+      <td class="num hide-sm">${plata(a.totalPagado)}<div class="quiet">${plural(a.pagos, "cuota", "cuotas")}</div></td>
+    </tr>`;
+  }).join("");
+  document.querySelectorAll("thead th[data-sort]").forEach(th => {
+    const s = th.dataset.sort, ar = th.querySelector(".arrow");
+    if (ar) ar.textContent = s === orden.campo ? (orden.asc ? "▲" : "▼") : "";
+  });
+}
+
+function pintarBajas() {
+  const bajas = enriquecidos.filter(a => a.baja);
+  const el = document.getElementById("bajas");
+  if (!bajas.length) { el.innerHTML = ""; return; }
+  const cuenta = {};
+  bajas.forEach(a => { const m = a.motivo || "Sin motivo anotado"; cuenta[m] = (cuenta[m] || 0) + 1; });
+  const orden2 = Object.keys(cuenta).sort((x,y) => cuenta[y] - cuenta[x]);
+  const perdido = bajas.reduce((s,a) => s + (Number(a.mensual) || Number(CFG.mensualidad)), 0);
+  el.innerHTML = `<h2>Por qué se han ido <span class="count">${bajas.length}</span> <span class="normal">${plata(perdido)} al mes que dejaron de entrar</span></h2>
+    <div class="motivos">${orden2.map(m => `<div class="motivo"><span class="c">${cuenta[m]}</span><span class="m">${esc(m)}</span></div>`).join("")}</div>`;
+}
+
+function pintarPagos() {
+  const tp = document.getElementById("tpagos");
+  const lista = PAGOS.slice(0, 30);
+  if (!lista.length) {
+    tp.innerHTML = `<tr><td colspan="6"><div class="empty">Sin pagos registrados aún.</div></td></tr>`;
+    return;
+  }
+  const comoPago = v => v === "efectivo" ? "Efectivo" : v === "transferencia" ? "Transferencia" : v === "canje" ? "Canje" : "Mercado Pago";
+  tp.innerHTML = lista.map(p => `<tr>
+    <td class="num">${corto(p.f)}</td>
+    <td>${esc(p.n)}</td>
+    <td class="num">${plata(p.m)}${(p.via||"") === "canje" ? `<div class="quiet">no es plata</div>` : ""}</td>
+    <td><span class="chip ${(p.via||"") === "efectivo" ? "plata" : (p.via||"") === "canje" ? "warn" : "mute"}">${comoPago(p.via)}</span>${p.que ? `<div class="quiet">${esc(p.que)}${Number(p.meses) > 1 ? " · " + plural(Number(p.meses), "mes", "meses") : ""}</div>` : ""}</td>
+    <td><span class="chip ${p.e === "approved" ? "ok" : "mute"}">${p.e === "approved" ? "Acreditado" : "Rechazado"}</span></td>
+    <td class="num hide-sm quiet">${p.h ? fmt(p.h) : "—"}</td></tr>`).join("");
+}
+
+function pintarTodo() {
+  document.getElementById("titulo").textContent = CFG.gym || "Panel del Gimnasio";
+  document.title = CFG.gym || "Panel del Gimnasio";
+  calcular();
+  pintarAvisos(); pintarCaja(); pintarTiles(); pintarAtencion();
+  pintarSemana(); pintarProrrateos(); pintarTabla(); pintarBajas(); pintarPagos();
+  const a = new Date();
+  document.getElementById("clock").textContent = DIAS_SEM[HOY.getDay()] + " " + fmt(iso(HOY)) + " · " +
+    String(a.getHours()).padStart(2,"0") + ":" + String(a.getMinutes()).padStart(2,"0");
+  document.getElementById("pieModo").innerHTML = MODO === "vivo"
+    ? "Conectado a la planilla del gimnasio. Se actualiza solo cada 60 segundos."
+    : "Estás en la demostración: nada de lo que hagas acá toca los datos reales.";
+}
+
+/* ---------- mensajes de cobro ---------- */
+
+// Se habla de a uno, nunca en el grupo. Cuatro tonos, como hacen Glofox y Gymdesk:
+// primero avisa, después ayuda, al final pide una respuesta. Ver DESIGN.md.
+const DIAS_LARGOS = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+function fechaHumana(f) { const x = d(f); return DIAS_LARGOS[x.getDay()] + " " + x.getDate() + " de " + MESES[x.getMonth()]; }
+
+function mensajeCobro(a) {
+  const k = a.est.dias, nombre = a.n.split(" ")[0];
+  const monto = plata(a.debe > 0 ? a.debe : a.m);
+  const cuantos = a.ciclosDebe > 1 ? " por " + plural(a.ciclosDebe, "mes", "meses") : "";
+  const link = linkCuota(a) || a.link;
+  const pagar = link ? "Acá ves el detalle y pagas en un toque:\n" + link : "Me lo puedes transferir o pasar en efectivo en la clase.";
+  let l;
+  if (a.est.k === "sinfecha") l = ["Hola " + nombre + " 👊", "Estoy ordenando las mensualidades y me falta la tuya. ¿Me confirmas cuándo pagaste la última?"];
+  else if (k === 1) l = ["Hola " + nombre + " 👊", "Mañana, " + fechaHumana(a.ven) + ", vence tu membresía. Si no está pagada, mañana ya no vas a poder entrar al gimnasio. Son " + monto + ".", pagar, "Si ya pagaste, no le hagas caso a este mensaje."];
+  else if (k > 0) l = ["Hola " + nombre + " 👊", "Te aviso con tiempo: tu membresía vence el " + fechaHumana(a.ven) + ", en " + plural(k, "día", "días") + ". Son " + monto + ".", pagar];
+  else if (k === 0) l = ["Hola " + nombre + " 👊", "Hoy vence tu membresía (" + monto + "). Hasta que esté pagada no puedes entrar al gimnasio.", pagar];
+  else if (k >= -6) l = ["Hola " + nombre + " 👊", "Se te pasó la mensualidad: venció el " + fechaHumana(a.ven) + ". Son " + monto + cuantos + ".", pagar, "Si ya pagaste, no le hagas caso a este mensaje."];
+  else l = ["Hola " + nombre, "Llevas " + plural(-k, "día", "días") + " con la mensualidad atrasada (" + monto + cuantos + ").", pagar,
+    "Si estás complicado este mes, dime y lo vemos. Necesito saber de ti esta semana para guardarte tus días."];
+  return l.join("\n\n");
+}
+
+/* ---------- link "Mi cuota" de cada alumno ---------- */
+
+let FIRMAS = {};
+const DEMO_TRANSFER = { nombre: "Gimnasio de Boxeo SpA", rut: "77.123.456-7", banco: "BancoEstado", tipo: "Cuenta RUT", cuenta: "12345678", correo: "pagos@gimnasio.cl" };
+
+function b64url(texto) {
+  const bytes = new TextEncoder().encode(texto);
+  let bin = ""; bytes.forEach(b => { bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function linkCuota(a) {
+  const base = new URL(location.protocol === "file:" || location.hostname.endsWith("github.io") ? "cuota.html" : "cuota", location.href).href;
+  if (MODO === "vivo") return FIRMAS[a.id] ? base + "?a=" + encodeURIComponent(a.id) + "&k=" + FIRMAS[a.id] : "";
+  // En la demostración los datos viajan dentro del link: no toca ningún servidor.
+  const datos = {
+    gym: CFG.gym && CFG.gym !== CFG_DEF.gym ? CFG.gym : "Gimnasio de Boxeo", wa: "", transferencia: DEMO_TRANSFER,
+    alumno: { n: a.n, ven: a.ven, m: a.m, mensual: a.mensual, plan: a.plan, dias: a.dias, link: a.link },
+    pagos: PAGOS.filter(p => p.id === a.id && p.e === "approved").map(p => ({ f: p.f, m: p.m, via: p.via, hasta: p.h }))
+  };
+  return base + "#d=" + b64url(JSON.stringify(datos));
+}
+
+// Las firmas las da el worker de Cloudflare y solo con la sesión iniciada.
+function cargarFirmas() {
+  if (MODO !== "vivo" || location.protocol === "file:") return;
+  const faltan = ALUMNOS.map(a => String(a.id)).filter(id => id && !FIRMAS[id]);
+  if (!faltan.length) return;
+  fetch("/api/firmas?ids=" + encodeURIComponent(faltan.join(",")), { cache: "no-store" })
+    .then(r => r.ok ? r.json() : null)
+    .then(r => { if (r && r.firmas) Object.assign(FIRMAS, r.firmas); })
+    .catch(() => {});
+}
+
+/* ---------- ronda de avisos: todos los de hoy, de a uno ---------- */
+
+function avisados() { try { return JSON.parse(localStorage.getItem("gym.avisos") || "{}"); } catch (e) { return {}; } }
+function marcarAvisado(id) {
+  const m = avisados(); m[id] = iso(HOY);
+  try { localStorage.setItem("gym.avisos", JSON.stringify(m)); } catch (e) {}
+}
+function avisadoHace(a) { const f = avisados()[a.id]; return f && valida(f) ? -dias(f) : null; }
+function textoAvisado(a) {
+  const h = avisadoHace(a);
+  return h === null ? "" : h === 0 ? "avisado hoy" : h === 1 ? "avisado ayer" : "avisado hace " + h + " días";
+}
+// La misma regla que los avisos automáticos de las 09:00 (_worker.js → tocaAvisar):
+// 5 días antes, 1 día antes ("mañana ya no entras"), después día por medio y pasadas dos semanas,
+// una vez por semana. Y a quien ya se le escribió hoy, no se le repite.
+function tocaHoy(a) {
+  if (a.baja || a.sinTelefono) return false;
+  if (avisadoHace(a) === 0) return false;
+  if (a.est.k === "sinfecha") return true;
+  const k = a.est.dias;
+  if (k === null || k > 5) return false;
+  if (k === 5 || k === 1) return true;
+  if (k < 0 && k >= -14) return k % 2 === 0;
+  return k < -14 && k % 7 === 0;
+}
+
+function abrirRonda() {
+  const lista = activos().filter(tocaHoy).sort((x, y) => orderDias(x) - orderDias(y));
+  let i = 0, mandados = 0;
+  const fin = () => abrirModal(`
+    <button class="x" id="modalX" aria-label="Cerrar">&times;</button>
+    <h3>${lista.length ? "Ronda terminada" : "Hoy no toca avisarle a nadie"}</h3>
+    <div class="previo"><span>${lista.length
+      ? `Le escribiste a <b>${plural(mandados, "persona", "personas")}</b>, a cada una por interno. En el grupo no hay que decir nada.`
+      : `Los que deben ya recibieron su aviso hoy o ayer. Mañana vuelve a armarse la lista sola.`}</span></div>
+    <div class="pie"><button class="btn fuerte" id="modalCancelar">Listo</button></div>`, () => pintarAtencion());
+  const paso = () => {
+    if (i >= lista.length) return fin();
+    const a = lista[i];
+    const msg = mensajeCobro(a);
+    abrirModal(`
+      <button class="x" id="modalX" aria-label="Cerrar">&times;</button>
+      <div class="ronda-cab"><span>Ronda de avisos</span><span>${i + 1} de ${lista.length}</span></div>
+      <div class="ronda-barra"><div style="width:${Math.round(i / lista.length * 100)}%"></div></div>
+      <div class="ronda-quien">
+        <div><h3>${esc(a.n)}</h3><span class="quiet">${esc(tel(a.t))}${textoAvisado(a) ? " · " + textoAvisado(a) : ""}</span></div>
+        <div style="text-align:right"><span class="chip ${a.est.cls}">${a.est.txt}</span><div class="ronda-monto">${plata(a.debe || a.m)}</div></div>
+      </div>
+      <div class="burbuja">${esc(msg).replace(/(https?:\/\/\S{36})\S{8,}/g, "$1…")}</div>
+      <div class="pie ronda-pie">
+        <button class="btn" id="rondaSaltar">Saltar</button>
+        <a class="btn fuerte ronda-wa" id="rondaWa" href="${whatsapp(a.t, msg)}" target="_blank" rel="noopener">Mandar por WhatsApp</a>
+      </div>`, () => {
+      document.getElementById("rondaSaltar").onclick = () => { i++; paso(); };
+      document.getElementById("rondaWa").onclick = () => {
+        marcarAvisado(a.id); mandados++; i++;
+        toast("Avisado: " + a.n.split(" ")[0]);
+        setTimeout(paso, 250);
+      };
+    });
+  };
+  paso();
+}
+
+function abrirAvisoGrupo() {
+  const texto = "Hola a todos 👊\n\nDesde ahora los avisos de mensualidad les van a llegar a cada uno por interno, con un link donde ven cuánto deben, sus días y cómo pagar.\n\nEste grupo queda solo para entrenamientos y avisos del gimnasio. Cualquier duda con su cuota, me escriben directo.";
+  abrirModal(`
+    <button class="x" id="modalX" aria-label="Cerrar">&times;</button>
+    <h3>El último aviso de cobros en el grupo</h3>
+    <span class="quiet">Mándalo una sola vez para que sepan que desde ahora les escribes por interno.</span>
+    <div class="burbuja">${esc(texto)}</div>
+    <div class="pie"><button class="btn" id="modalCancelar">Cerrar</button><button class="btn fuerte" id="copiarGrupo">Copiar mensaje</button></div>`, () => {
+    document.getElementById("copiarGrupo").onclick = () =>
+      navigator.clipboard.writeText(texto).then(() => toast("Copiado, pégalo en el grupo")).catch(() => toast("No se pudo copiar"));
+  });
+}
+
+function mensajeBienvenida(a, pr) {
+  const nombre = String(a.n || "").split(" ")[0];
+  const l = ["Bienvenido al gimnasio, " + nombre + "!"];
+  if (pr && pr.parcial) {
+    l.push("Como entras el " + corto(a.ini) + ", este primer mes pagas solo los días que te quedan: " + plata(a.m) + " por " + plural(pr.cubre, "día", "días") + ", hasta el " + corto(pr.hasta) + ".");
+    l.push("Desde ahí en adelante son " + plata(pr.completo) + " al mes, siempre con corte el " + CFG.corte + ".");
+  } else {
+    l.push("Tu mensualidad es de " + plata(a.m) + ", con corte el " + CFG.corte + " de cada mes.");
+  }
+  const dias = listaDias(a.dias);
+  if (dias.length) {
+    l.push("Tu plan es " + nombrePlan(a.plan) + " y te tocan los " +
+      dias.map(id => { const d = DIAS_SEMANA.find(x => x.id === id); return d ? d.largo : id; }).join(" y ") + ".");
+  }
+  const cuota = a.id ? linkCuota(a) : "";
+  if (cuota) l.push("Acá ves tu cuota, tus días y cómo pagar, cuando quieras:\n" + cuota);
+  else if (a.link) l.push("Puedes pagar acá: " + a.link);
+  l.push("Los avisos de pago te llegan por acá, por interno, unos días antes del " + CFG.corte + ".");
+  return l.join("\n\n");
+}
+
+function whatsapp(t, msg) { return "https://wa.me/" + telNormal(t) + "?text=" + encodeURIComponent(msg); }
+
+/* ---------- toast ---------- */
+
+function toast(t) {
+  const el = document.getElementById("toast");
+  el.textContent = t; el.classList.add("show");
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2600);
+}
+
+/* ---------- ficha del alumno ---------- */
+
+function abrirFicha(id) {
+  const a = enriquecidos.find(x => x.id === id);
+  if (!a) return;
+  const k = a.est.dias;
+  const hist = PAGOS.filter(p => p.id === a.id);
+  const msg = mensajeCobro(a);
+  const men = Number(a.mensual) || Number(CFG.mensualidad);
+  document.getElementById("drawer").innerHTML = `
+    <button class="x" id="cerrar" aria-label="Cerrar">&times;</button>
+    <div class="dhead">
+      <h3>${esc(a.n)}</h3>
+      <span class="id">${esc(a.id)}</span>
+      <div style="margin-top:8px"><span class="chip ${a.est.cls}">${a.est.txt}</span>${a.baja && a.motivo ? ` <span class="chip mute">${esc(a.motivo)}</span>` : ""}</div>
+    </div>
+    <div class="facts">
+      ${a.baja ? `
+        <div class="fact full"><div class="k">Se fue el</div><div class="v">${a.fechaBaja ? fmt(a.fechaBaja) : "—"}</div></div>
+        <div class="fact full"><div class="k">Motivo</div><div class="v" style="font-size:14px">${esc(a.motivo || "sin anotar")}</div></div>
+        ${a.notaBaja ? `<div class="fact full"><div class="k">Nota</div><div class="v" style="font-size:13.5px;font-weight:500">${esc(a.notaBaja)}</div></div>` : ""}
+      ` : `
+        <div class="fact"><div class="k">Vence</div><div class="v">${k === null ? "—" : fmt(a.ven)}</div></div>
+        <div class="fact"><div class="k">${k === null ? "Estado" : (k < 0 ? "Atrasado" : "Faltan")}</div><div class="v">${k === null ? "sin fecha" : plural(Math.abs(k), "día", "días")}</div></div>
+        <div class="fact"><div class="k">Mensualidad</div><div class="v">${plata(men)}</div></div>
+        <div class="fact"><div class="k">Cobro actual</div><div class="v">${plata(a.m)}${a.m < men ? ` <span class="quiet">prorrateo</span>` : ""}</div></div>
+        ${a.debe > 0 ? `<div class="fact full" style="background:var(--bad-bg)"><div class="k" style="color:var(--bad)">Debe ahora</div><div class="v" style="color:var(--bad)">${plata(a.debe)} <span class="quiet">${a.ciclosDebe > 1 ? "(" + plural(a.ciclosDebe, "mes", "meses") + " acumulados)" : ""}</span></div></div>` : ""}
+      `}
+      <div class="fact full"><div class="k">Plan</div><div class="v">${esc(nombrePlan(a.plan))} <span class="quiet">${plata(men)} al mes</span></div></div>
+      <div class="fact full"><div class="k">Le tocan los</div><div class="v">${textoDias(a.dias)}</div></div>
+      <div class="fact"><div class="k">Socio hace</div><div class="v">${antig(a.antiguedad)}</div></div>
+      <div class="fact"><div class="k">Edad</div><div class="v">${a.edad === null ? "—" : a.edad + " años"}</div></div>
+      <div class="fact"><div class="k">Cuotas pagadas</div><div class="v">${a.pagos}</div></div>
+      <div class="fact"><div class="k">Teléfono</div><div class="v" style="font-size:13px">${tel(a.t)}</div></div>
+      <div class="fact full"><div class="k">Ha pagado en total</div><div class="v">${plata(a.totalPagado)}${a.ini ? ` <span class="quiet">desde ${fmt(a.ini)}</span>` : ""}</div></div>
+    </div>
+    <div class="acts">
+      ${a.baja
+        ? `<button class="act primary" data-accion="reactivar" data-id="${esc(a.id)}"><span class="ico">↩︎</span> Volver a activar</button>`
+        : (a.sinTelefono
+            ? `<div class="act" style="opacity:.65;cursor:default"><span class="ico">⚠️</span> Sin teléfono — edítalo para poder cobrarle</div>`
+            : `<a class="act primary" href="${whatsapp(a.t, msg)}" target="_blank" rel="noopener" data-avisar="${esc(a.id)}"><span class="ico">💬</span> Cobrarle por WhatsApp${textoAvisado(a) ? ` <span class="quiet" style="color:inherit;opacity:.8">· ${textoAvisado(a)}</span>` : ""}</a>
+               <a class="act" href="tel:+${telNormal(a.t)}"><span class="ico">📞</span> Llamar</a>`)}
+      ${a.baja ? "" : `<button class="act verde" data-accion="pago" data-id="${esc(a.id)}"><span class="ico">💵</span> Registrar un pago suyo</button>`}
+      <button class="act" data-accion="copiar" data-id="${esc(a.id)}"><span class="ico">📋</span> Copiar el mensaje de cobro</button>
+      <button class="act" data-accion="editar" data-id="${esc(a.id)}"><span class="ico">✎</span> Editar sus datos</button>
+      ${!a.baja && linkCuota(a) ? `<a class="act" href="${esc(linkCuota(a))}" target="_blank" rel="noopener"><span class="ico">👀</span> Ver la página que recibe</a>` : ""}
+      ${a.link ? `<a class="act" href="${esc(a.link)}" target="_blank" rel="noopener"><span class="ico">🔗</span> Abrir su link de pago</a>` : ""}
+      ${a.baja
+        ? `<button class="act roja" data-accion="borrar" data-id="${esc(a.id)}"><span class="ico">🗑</span> Borrarlo de la lista para siempre</button>`
+        : `<button class="act roja" data-accion="baja" data-id="${esc(a.id)}"><span class="ico">🚪</span> Dar de baja</button>`}
+    </div>
+    <div>
+      <h2 style="margin-bottom:6px">Historial de pagos</h2>
+      ${hist.length
+        ? `<div class="hist">${hist.map(p => `<div class="row"><span>${fmt(p.f)}<span class="quiet"> · ${p.via === "efectivo" ? "efectivo" : p.via === "transferencia" ? "transferencia" : p.via === "canje" ? "canje" + (p.que ? ": " + esc(p.que) : "") : "Mercado Pago"}</span></span><span>${plata(p.m)} <span class="chip ${p.via === "canje" ? "warn" : p.e === "approved" ? "ok" : "mute"}">${p.via === "canje" ? "Canje" : p.e === "approved" ? "OK" : "Rechazado"}</span></span></div>`).join("")}</div>`
+        : `<div class="quiet">${a.pagos > 0
+            ? "Sus " + plural(a.pagos, "cuota", "cuotas") + " son anteriores al sistema. Desde ahora cada pago queda registrado acá."
+            : "Todavía no ha pagado ninguna cuota."}</div>`}
+    </div>`;
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("scrim").classList.add("open");
+  document.getElementById("cerrar").onclick = cerrarFicha;
+  document.getElementById("cerrar").focus();
+}
+
+function cerrarFicha() {
+  document.getElementById("drawer").classList.remove("open");
+  if (!document.getElementById("modalCaja").classList.contains("open")) {
+    document.getElementById("scrim").classList.remove("open");
+  }
+}
+
+/* ---------- modales ---------- */
+
+function abrirModal(html, alMontar) {
+  document.getElementById("modal").innerHTML = html;
+  document.getElementById("modalCaja").classList.add("open");
+  document.getElementById("scrim").classList.add("open");
+  const x = document.getElementById("modalX");
+  if (x) x.onclick = cerrarModal;
+  const c = document.getElementById("modalCancelar");
+  if (c) c.onclick = cerrarModal;
+  if (alMontar) alMontar();
+  const primero = document.querySelector("#modal input, #modal select, #modal textarea");
+  if (primero) primero.focus();
+}
+
+function cerrarModal() {
+  document.getElementById("modalCaja").classList.remove("open");
+  if (!document.getElementById("drawer").classList.contains("open")) {
+    document.getElementById("scrim").classList.remove("open");
+  }
+}
+
+function campoSelect(id, label, opciones, valor) {
+  return `<div class="campo"><label for="${id}">${label}</label><select id="${id}">${
+    opciones.map(o => `<option value="${esc(o)}"${o === valor ? " selected" : ""}>${esc(o)}</option>`).join("")
+  }</select></div>`;
+}
+
+/* --- nuevo alumno / editar --- */
+
+function abrirAlumno(id) {
+  const a = id ? enriquecidos.find(x => x.id === id) : null;
+  const esNuevo = !a;
+  const hoyIso = iso(HOY);
+  abrirModal(`
+    <button class="x" id="modalX" aria-label="Cerrar">&times;</button>
+    <h3>${esNuevo ? "Nuevo alumno" : "Editar a " + esc(a.n)}</h3>
+    <div class="campos">
+      <div class="campo"><label for="fNombre">Nombre y apellido</label><input id="fNombre" type="text" value="${esNuevo ? "" : esc(a.n)}" placeholder="Camila Fuentes Rojas"></div>
+      <div class="fila2">
+        <div class="campo"><label for="fTel">WhatsApp</label><input id="fTel" type="tel" inputmode="numeric" value="${esNuevo ? "" : esc(a.t)}" placeholder="9 1234 5678"><span class="ayuda">Con o sin +56, da lo mismo.</span></div>
+        <div class="campo"><label for="fNace">Fecha de nacimiento</label><input id="fNace" type="date" value="${esNuevo ? "" : esc(a.nace || "")}"><span class="ayuda" id="avisoEdad">Desde ${CFG.edadMinima} años.</span></div>
+      </div>
+      <div class="campo">
+        <label for="fPlan">Plan</label>
+        <select id="fPlan">${planes().map(p => `<option value="${esc(p.id)}"${(esNuevo ? planes()[0].id : a.plan) === p.id ? " selected" : ""}>${esc(p.nombre)} — ${plata(p.precio)}${p.detalle ? " (" + esc(p.detalle) + ")" : ""}</option>`).join("")}</select>
+      </div>
+      <div class="campo">
+        <label>Días fijos <span id="cuentaDias" class="ayuda" style="text-transform:none;letter-spacing:0"></span></label>
+        <div class="dias" id="fDias">${DIAS_SEMANA.map(dd => `<button type="button" class="dia" data-dia="${dd.id}">${dd.corto}</button>`).join("")}</div>
+        <span class="ayuda">Los días que le tocan cada semana. Si viene o no, es problema suyo.</span>
+      </div>
+      <div class="fila2">
+        <div class="campo"><label for="fMensual">Cuánto paga al mes</label><input id="fMensual" type="number" min="0" step="1000" value="${esNuevo ? planes()[0].precio : (Number(a.mensual) || precioPlan(a.plan))}"><span class="ayuda">Lo pone el plan; puedes cambiarlo.</span></div>
+        ${esNuevo
+          ? `<div class="campo"><label for="fIni">Entra el día</label><input id="fIni" type="date" value="${hoyIso}"></div>`
+          : `<div class="campo"><label for="fVen">Su membresía vence el</label><input id="fVen" type="date" value="${esc(a.ven || "")}"></div>`}
+      </div>
+      <div class="campo"><label for="fLink">Link de pago (opcional)</label><input id="fLink" type="url" value="${esNuevo ? "" : esc(a.link || "")}" placeholder="https://mpago.la/..."></div>
+    </div>
+    ${esNuevo ? `<div class="previo" id="previo"></div>` : ""}
+    <div class="pie">
+      <button class="btn" id="modalCancelar">Cancelar</button>
+      <button class="btn fuerte" id="modalOk">${esNuevo ? "Crear alumno" : "Guardar cambios"}</button>
+    </div>`, () => {
+    const previo = document.getElementById("previo");
+    let elegidos = esNuevo ? [] : listaDias(a.dias);
+
+    function pintarDias() {
+      const tope = diasDelPlan(document.getElementById("fPlan").value);
+      document.querySelectorAll("#fDias .dia").forEach(b => {
+        b.classList.toggle("on", elegidos.indexOf(b.dataset.dia) >= 0);
+      });
+      const c = document.getElementById("cuentaDias");
+      c.textContent = elegidos.length + " de " + tope;
+      c.style.color = elegidos.length === tope ? "var(--plata)" : "var(--ink-soft)";
+    }
+    document.getElementById("fDias").addEventListener("click", e => {
+      const b = e.target.closest(".dia");
+      if (!b) return;
+      const dia = b.dataset.dia;
+      const tope = diasDelPlan(document.getElementById("fPlan").value);
+      const i = elegidos.indexOf(dia);
+      if (i >= 0) elegidos.splice(i, 1);
+      else if (elegidos.length >= tope) { toast("Este plan trae " + plural(tope, "día", "días") + " por semana"); return; }
+      else elegidos.push(dia);
+      elegidos.sort((x, y) => DIAS_SEMANA.findIndex(d => d.id === x) - DIAS_SEMANA.findIndex(d => d.id === y));
+      pintarDias();
+      repintar();
+    });
+
+    function avisarEdad() {
+      const el = document.getElementById("avisoEdad");
+      const e = edad(document.getElementById("fNace").value);
+      if (e === null) { el.textContent = "Desde " + CFG.edadMinima + " años."; el.style.color = "var(--ink-soft)"; return; }
+      const min = Number(CFG.edadMinima) || 0;
+      el.textContent = e < min ? "Tiene " + e + " años — el mínimo es " + min : e + " años";
+      el.style.color = e < min ? "var(--bad)" : "var(--ink-soft)";
+    }
+
+    function repintar() {
+      if (!previo) return;
+      const ini = document.getElementById("fIni").value;
+      const men = Number(document.getElementById("fMensual").value) || 0;
+      const pr = prorrateo(ini, men);
+      if (!pr) { previo.innerHTML = "Elige la fecha en que entra."; return; }
+      const dias = elegidos.length ? " Le tocan los <b>" + textoDias(elegidos) + "</b>." : "";
+      previo.innerHTML = pr.parcial
+        ? `<span>Cobrarle ahora</span><span class="monto">${plata(pr.monto)}</span><span>Paga <b>${plural(pr.cubre, "día", "días")} de ${pr.ciclo}</b>, hasta el <b>${fmt(pr.hasta)}</b>. Desde ahí paga <b>${plata(pr.completo)}</b> al mes.${dias}</span>`
+        : `<span>Cobrarle ahora</span><span class="monto">${plata(pr.monto)}</span><span>Entra justo en el corte: paga <b>el mes completo</b> hasta el <b>${fmt(pr.hasta)}</b>.${dias}</span>`;
+    }
+
+    document.getElementById("fPlan").addEventListener("change", e => {
+      const p = planPorId(e.target.value);
+      document.getElementById("fMensual").value = p.precio;
+      const tope = Number(p.dias);
+      if (elegidos.length > tope) elegidos = elegidos.slice(0, tope);
+      pintarDias();
+      repintar();
+    });
+    document.getElementById("fNace").addEventListener("input", avisarEdad);
+    document.getElementById("fMensual").addEventListener("input", repintar);
+    if (previo) document.getElementById("fIni").addEventListener("input", repintar);
+    pintarDias(); avisarEdad(); repintar();
+
+    document.getElementById("modalOk").onclick = () => {
+      const nombre = document.getElementById("fNombre").value.trim();
+      const t = telNormal(document.getElementById("fTel").value);
+      const men = Number(document.getElementById("fMensual").value) || 0;
+      const link = document.getElementById("fLink").value.trim();
+      const plan = document.getElementById("fPlan").value;
+      const nace = document.getElementById("fNace").value;
+      const tope = diasDelPlan(plan);
+      if (!nombre) { toast("Falta el nombre"); return; }
+      if (elegidos.length !== tope) { toast("Elige sus " + plural(tope, "día fijo", "días fijos")); return; }
+      const anos = edad(nace);
+      const min = Number(CFG.edadMinima) || 0;
+      if (anos !== null && anos < min && !document.getElementById("modalOk").dataset.insistio) {
+        document.getElementById("modalOk").dataset.insistio = "1";
+        document.getElementById("modalOk").textContent = "Crearlo igual";
+        toast("Tiene " + anos + " años y el mínimo es " + min + ". Toca de nuevo para crearlo igual.");
+        return;
+      }
+      if (esNuevo) {
+        const ini = document.getElementById("fIni").value;
+        const pr = prorrateo(ini, men);
+        if (!pr) { toast("Falta la fecha en que entra"); return; }
+        const nuevo = {
+          id: "A-" + String(Date.now()).slice(-6),
+          n: nombre, t: t, ini: ini, ven: pr.hasta,
+          m: pr.monto, mensual: men, link: link,
+          plan: plan, dias: elegidos.slice(), nace: nace,
+          estado: "activo", pagos: 0
+        };
+        aplicar("alta", nuevo, () => {
+          cerrarModal();
+          const msg = mensajeBienvenida(nuevo, pr);
+          if (t) {
+            toast("Alumno creado — abriendo su WhatsApp");
+            window.open(whatsapp(t, msg), "_blank", "noopener");
+          } else {
+            toast("Alumno creado");
+          }
+        });
+      } else {
+        const ven = document.getElementById("fVen").value;
+        aplicar("editar", {
+          id: a.id, n: nombre, t: t, mensual: men, m: a.m, ven: ven, link: link,
+          plan: plan, dias: elegidos.slice(), nace: nace
+        }, () => { cerrarModal(); toast("Datos guardados"); });
+      }
+    };
+  });
+}
+
+/* --- dar de baja --- */
+
+function abrirBaja(id) {
+  const a = enriquecidos.find(x => x.id === id);
+  if (!a) return;
+  abrirModal(`
+    <button class="x" id="modalX" aria-label="Cerrar">&times;</button>
+    <h3>Dar de baja a ${esc(a.n)}</h3>
+    <div class="campos">
+      ${campoSelect("fMotivo", "Por qué se va", MOTIVOS, MOTIVOS[0])}
+      <div class="campo"><label for="fFechaBaja">Desde cuándo</label><input id="fFechaBaja" type="date" value="${iso(HOY)}"></div>
+      <div class="campo"><label for="fNota">Nota (opcional)</label><textarea id="fNota" placeholder="Lo que quieras recordar de este caso"></textarea></div>
+    </div>
+    <div class="previo" style="background:var(--bad-bg);border-color:color-mix(in srgb, var(--bad) 30%, transparent)">
+      <span>Deja de contar como alumno activo y no le vuelven a salir avisos de cobro. Queda guardado en la lista de bajas: <b>puedes reactivarlo cuando vuelva</b>.</span>
+      ${a.debe > 0 ? `<span>Ojo: hoy debe <b>${plata(a.debe)}</b>. Al darlo de baja esa deuda deja de aparecer en "falta por cobrar".</span>` : ""}
+    </div>
+    <div class="pie">
+      <button class="btn" id="modalCancelar">Cancelar</button>
+      <button class="btn peligro" id="modalOk">Dar de baja</button>
+    </div>`, () => {
+    document.getElementById("modalOk").onclick = () => {
+      aplicar("baja", {
+        id: a.id,
+        motivo: document.getElementById("fMotivo").value,
+        fechaBaja: document.getElementById("fFechaBaja").value,
+        notaBaja: document.getElementById("fNota").value.trim()
+      }, () => { cerrarModal(); cerrarFicha(); toast(a.n + " quedó dado de baja"); });
+    };
+  });
+}
+
+/* --- registrar pago --- */
+
+function abrirPago(id) {
+  const lista = activos().slice().sort((x,y) => limpia(x.n).localeCompare(limpia(y.n)));
+  if (!lista.length) { toast("Primero agrega alumnos"); return; }
+  const sel = id || lista[0].id;
+  const inicial = enriquecidos.find(x => x.id === sel) || lista[0];
+  abrirModal(`
+    <button class="x" id="modalX" aria-label="Cerrar">&times;</button>
+    <h3>Registrar un pago</h3>
+    <div class="campos">
+      <div class="campo"><label for="fAlumno">Quién pagó</label><select id="fAlumno">${
+        lista.map(x => `<option value="${esc(x.id)}"${x.id === sel ? " selected" : ""}>${esc(x.n)}</option>`).join("")
+      }</select></div>
+      ${campoSelect("fVia", "Cómo pagó", ["Efectivo", "Transferencia", "Mercado Pago", "Canje"], "Efectivo")}
+      <div id="camposCanje" style="display:none">
+        <div class="campo"><label for="fQue">Qué entregó</label><input id="fQue" type="text" placeholder="Una ingleteadora"></div>
+        <div class="campo"><label for="fMeses">Cuántos meses le cubre</label><input id="fMeses" type="number" min="1" max="36" value="1"></div>
+      </div>
+      <div class="fila2">
+        <div class="campo"><label for="fMonto">Cuánto vale</label><input id="fMonto" type="number" min="0" step="1000" value="${inicial.debe > 0 ? inicial.debe : inicial.m}"></div>
+        <div class="campo"><label for="fFechaPago">Cuándo</label><input id="fFechaPago" type="date" value="${iso(HOY)}"></div>
+      </div>
+    </div>
+    <div class="previo" id="previoPago"></div>
+    <div class="pie">
+      <button class="btn" id="modalCancelar">Cancelar</button>
+      <button class="btn fuerte" id="modalOk">Registrar el pago</button>
+    </div>`, () => {
+    function alumnoSel() { return enriquecidos.find(x => x.id === document.getElementById("fAlumno").value); }
+    function esCanje() { return document.getElementById("fVia").value === "Canje"; }
+    function mesesElegidos() { return esCanje() ? Math.max(1, Number(document.getElementById("fMeses").value) || 1) : 1; }
+
+    function nuevoVence(a, meses) {
+      const base = valida(a.ven) && dias(a.ven) >= 0 ? d(a.ven) : new Date(HOY);
+      const c = Number(CFG.corte) || 10;
+      const prox = new Date(base.getFullYear(), base.getMonth(), c);
+      while (prox <= base) prox.setMonth(prox.getMonth() + 1);
+      prox.setMonth(prox.getMonth() + (Math.max(1, meses || 1) - 1));
+      return iso(prox);
+    }
+
+    function repintar() {
+      const a = alumnoSel();
+      if (!a) return;
+      const meses = mesesElegidos();
+      const hasta = nuevoVence(a, meses);
+      const canje = esCanje();
+      document.getElementById("camposCanje").style.display = canje ? "" : "none";
+      document.getElementById("previoPago").innerHTML = canje
+        ? `<span>No entra plata a la caja, pero la membresía de <b>${esc(a.n)}</b> queda cubierta <b>${plural(meses, "mes", "meses")}</b>, hasta el <b>${fmt(hasta)}</b>. Queda anotado aparte, en los canjes del mes.</span>`
+        : `<span>Al registrarlo, la membresía de <b>${esc(a.n)}</b> queda cubierta hasta el <b>${fmt(hasta)}</b> y deja de aparecer en la lista de cobro.</span>`;
+    }
+
+    function montoSugerido() {
+      const a = alumnoSel();
+      if (!a) return 0;
+      if (esCanje()) return mesesElegidos() * (Number(a.mensual) || Number(CFG.mensualidad));
+      return a.debe > 0 ? a.debe : a.m;
+    }
+
+    document.getElementById("fAlumno").addEventListener("change", () => {
+      document.getElementById("fMonto").value = montoSugerido();
+      repintar();
+    });
+    document.getElementById("fVia").addEventListener("change", () => {
+      document.getElementById("fMonto").value = montoSugerido();
+      repintar();
+    });
+    document.getElementById("fMeses").addEventListener("input", () => {
+      document.getElementById("fMonto").value = montoSugerido();
+      repintar();
+    });
+    repintar();
+
+    document.getElementById("modalOk").onclick = () => {
+      const a = alumnoSel();
+      const monto = Number(document.getElementById("fMonto").value) || 0;
+      if (!a) { toast("Falta el alumno"); return; }
+      const canje = esCanje();
+      const que = document.getElementById("fQue").value.trim();
+      if (canje && !que) { toast("Anota qué entregó"); return; }
+      if (!canje && monto <= 0) { toast("Falta el monto"); return; }
+      const meses = mesesElegidos();
+      const bruto = document.getElementById("fVia").value.toLowerCase().replace(/\s+/g, "");
+      aplicar("pago", {
+        id: a.id, n: a.n, m: monto,
+        f: document.getElementById("fFechaPago").value,
+        via: bruto === "mercadopago" ? "mp" : bruto,
+        que: canje ? que : "",
+        meses: meses,
+        h: nuevoVence(a, meses)
+      }, () => {
+        cerrarModal(); cerrarFicha();
+        toast(canje ? "Canje anotado — " + plural(meses, "mes cubierto", "meses cubiertos") : "Pago registrado — " + plata(monto));
+      });
+    };
+  });
+}
+
+/* --- configuración --- */
+
+function abrirConfig() {
+  abrirModal(`
+    <button class="x" id="modalX" aria-label="Cerrar">&times;</button>
+    <h3>Configuración</h3>
+    <div class="campos">
+      <div class="campo"><label for="cGym">Nombre del gimnasio</label><input id="cGym" type="text" value="${esc(CFG.gym)}"></div>
+      <div class="fila2">
+        <div class="campo"><label for="cCorte">Día de corte</label><input id="cCorte" type="number" min="1" max="28" value="${Number(CFG.corte)}"><span class="ayuda">Todos vencen ese día.</span></div>
+        <div class="campo"><label for="cEdad">Edad mínima</label><input id="cEdad" type="number" min="0" max="99" value="${Number(CFG.edadMinima)}"><span class="ayuda">Avisa al crear a alguien menor.</span></div>
+      </div>
+      <div class="campo">
+        <label>Planes</label>
+        ${planes().map((p, i) => `
+          <div class="plan-fila">
+            <input id="cPlanN${i}" type="text" value="${esc(p.nombre)}" placeholder="Nombre del plan">
+            <input id="cPlanP${i}" type="number" min="0" step="1000" value="${Number(p.precio)}" title="Precio al mes">
+            <input id="cPlanD${i}" type="number" min="1" max="6" value="${Number(p.dias)}" title="Días por semana">
+          </div>`).join("")}
+        <span class="ayuda">Nombre · cuánto cuesta al mes · cuántos días por semana trae.</span>
+      </div>
+      <div class="campo"><label for="cServidor">Servidor (n8n)</label><input id="cServidor" type="url" value="${esc(CFG.servidor)}" placeholder="https://tu-n8n.com"><span class="ayuda">Déjalo vacío para quedarte en la demostración.</span></div>
+      <div class="campo"><label for="cClave">Clave del panel</label><input id="cClave" type="password" value="${esc(CFG.clave)}" placeholder="opcional"><span class="ayuda">Se manda al servidor en cada llamada.</span></div>
+    </div>
+    <div class="pie">
+      <button class="btn" id="modalCancelar">Cancelar</button>
+      <button class="btn fuerte" id="modalOk">Guardar</button>
+    </div>`, () => {
+    document.getElementById("modalOk").onclick = () => {
+      CFG.gym = document.getElementById("cGym").value.trim() || CFG_DEF.gym;
+      CFG.corte = Math.min(28, Math.max(1, Number(document.getElementById("cCorte").value) || CFG_DEF.corte));
+      CFG.edadMinima = Math.max(0, Number(document.getElementById("cEdad").value) || 0);
+      CFG.planes = planes().map((p, i) => ({
+        id: p.id,
+        nombre: document.getElementById("cPlanN" + i).value.trim() || p.nombre,
+        precio: Number(document.getElementById("cPlanP" + i).value) || p.precio,
+        dias: Math.min(6, Math.max(1, Number(document.getElementById("cPlanD" + i).value) || p.dias)),
+        detalle: p.detalle
+      }));
+      CFG.mensualidad = CFG.planes[0].precio;
+      CFG.servidor = document.getElementById("cServidor").value.trim().replace(/\/+$/, "");
+      CFG.clave = document.getElementById("cClave").value;
+      guardarCfg();
+      cerrarModal();
+      toast("Configuración guardada");
+      cargarDatos(true);
+    };
+  });
+}
+
+/* ---------- escrituras: servidor o demo ---------- */
+
+function guardarDemo() {
+  localStorage.setItem("gym.demo", JSON.stringify({ alumnos: ALUMNOS, pagos: PAGOS }));
+}
+
+function aplicarEnMemoria(accion, datos) {
+  if (accion === "alta") {
+    ALUMNOS.push(datos);
+  } else if (accion === "editar") {
+    const a = ALUMNOS.find(x => x.id === datos.id);
+    if (a) Object.assign(a, {
+      n: datos.n, t: datos.t, mensual: datos.mensual, ven: datos.ven, link: datos.link,
+      plan: datos.plan, dias: datos.dias, nace: datos.nace
+    });
+  } else if (accion === "baja") {
+    const a = ALUMNOS.find(x => x.id === datos.id);
+    if (a) Object.assign(a, { estado: "baja", motivo: datos.motivo, fechaBaja: datos.fechaBaja, notaBaja: datos.notaBaja });
+  } else if (accion === "reactivar") {
+    const a = ALUMNOS.find(x => x.id === datos.id);
+    if (a) Object.assign(a, { estado: "activo", motivo: "", fechaBaja: "", notaBaja: "" });
+  } else if (accion === "borrar") {
+    ALUMNOS = ALUMNOS.filter(x => x.id !== datos.id);
+  } else if (accion === "pago") {
+    PAGOS.unshift({
+      id: datos.id, n: datos.n, f: datos.f, m: datos.m, e: "approved", h: datos.h,
+      via: datos.via, que: datos.que || "", meses: Number(datos.meses) || 1
+    });
+    const a = ALUMNOS.find(x => x.id === datos.id);
+    if (a) { a.ven = datos.h; a.pagos = (Number(a.pagos) || 0) + 1; a.m = Number(a.mensual) || Number(CFG.mensualidad) || a.m; }
+  }
+}
+
+function aplicar(accion, datos, alTerminar) {
+  const btn = document.getElementById("modalOk");
+  if (MODO === "demo") {
+    aplicarEnMemoria(accion, datos);
+    guardarDemo();
+    pintarTodo();
+    if (alTerminar) alTerminar();
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = "Guardando..."; }
+  const ruta = accion === "pago" ? "/webhook/gym-pago-manual" : "/webhook/gym-alumno";
+  const cuerpo = Object.assign({ accion: accion, clave: CFG.clave }, datos);
+  fetch(CFG.servidor + ruta, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(cuerpo)
+  }).then(r => {
+    if (!r.ok) throw new Error("el servidor respondió " + r.status);
+    return r.json().catch(() => ({}));
+  }).then(() => {
+    aplicarEnMemoria(accion, datos);
+    pintarTodo();
+    if (alTerminar) alTerminar();
+    setTimeout(() => cargarDatos(false), 1500);
+  }).catch(e => {
+    if (btn) { btn.disabled = false; btn.textContent = "Reintentar"; }
+    toast("No se pudo guardar: " + e.message);
+  });
+}
+
+/* ---------- carga ---------- */
+
+function datosDemo() {
+  try {
+    const g = JSON.parse(localStorage.getItem("gym.demo") || "null");
+    if (g && Array.isArray(g.alumnos) && g.alumnos.length) return g;
+  } catch (e) {}
+  const men = Number(CFG.mensualidad) || 30000;
+  const corteMes = (delta, dia) => {
+    const x = new Date(HOY.getFullYear(), HOY.getMonth() + delta, dia || Number(CFG.corte) || 10);
+    return iso(x);
+  };
+  const diaDeEsteMes = n => iso(new Date(HOY.getFullYear(), HOY.getMonth(), n));
+  const entro = HOY.getDate() > 3 ? diaDeEsteMes(Math.max(1, HOY.getDate() - 2)) : diaDeEsteMes(1);
+  const prNuevo = prorrateo(entro, men);
+  const alumnos = [
+    { id:"A-001", n:"Camila Fuentes Rojas",  t:"56911223344", ini: corteMes(-17), ven: corteMes(1),  m:men, mensual:men, pagos:16, link:"https://mpago.la/ejemplo1", estado:"activo" },
+    { id:"A-002", n:"Matías Soto Herrera",   t:"56922334455", ini: corteMes(-7),  ven: corteMes(1),  m:men, mensual:men, pagos:7,  link:"https://mpago.la/ejemplo2", estado:"activo" },
+    { id:"A-003", n:"Valentina Águila Paz",  t:"56933445566", ini: corteMes(-21), ven: corteMes(1),  m:men, mensual:men, pagos:20, link:"https://mpago.la/ejemplo3", estado:"activo" },
+    { id:"A-004", n:"Joaquín Pérez Lagos",   t:"56944556677", ini: corteMes(-12), ven: corteMes(0),  m:men, mensual:men, pagos:11, link:"https://mpago.la/ejemplo4", estado:"activo" },
+    { id:"A-005", n:"Antonia Miranda Ruiz",  t:"56955667788", ini: entro,         ven: prNuevo.hasta, m: prNuevo.monto, mensual:men, pagos:0, link:"https://mpago.la/ejemplo5", estado:"activo" },
+    { id:"A-006", n:"Diego Cárcamo Vidal",   t:"56966778899", ini: corteMes(-6),  ven: iso(new Date(HOY.getFullYear(), HOY.getMonth(), HOY.getDate()+2)), m:men, mensual:men, pagos:6, link:"https://mpago.la/ejemplo6", estado:"activo" },
+    { id:"A-007", n:"Francisca Núñez Aros",  t:"56977889900", ini: corteMes(-14), ven: corteMes(-1), m:men, mensual:men, pagos:12, link:"https://mpago.la/ejemplo7", estado:"activo" },
+    { id:"A-008", n:"Ignacio Vera Godoy",    t:"56988990011", ini: corteMes(-5),  ven: iso(new Date(HOY.getFullYear(), HOY.getMonth(), HOY.getDate()-4)), m:men, mensual:men, pagos:5, link:"https://mpago.la/ejemplo8", estado:"activo" },
+    { id:"A-009", n:"Rocío Sandoval Díaz",   t:"56999001122", ini: corteMes(-19), ven: corteMes(-2), m:men, mensual:men, pagos:17, link:"https://mpago.la/ejemplo9", estado:"activo" },
+    { id:"A-010", n:"Benjamín Torres Silva", t:"56910111213", ini: corteMes(-4),  ven: corteMes(1),  m:men, mensual:men, pagos:4,  link:"", estado:"activo" },
+    { id:"A-011", n:"Paula Ojeda Cortés",    t:"",            ini: corteMes(-3),  ven: corteMes(1),  m:men, mensual:men, pagos:3,  link:"", estado:"activo" },
+    { id:"A-012", n:"Josefa Riquelme Sáez",  t:"56913141516", ini: corteMes(-24), ven: corteMes(1),  m:men, mensual:men, pagos:24, link:"https://mpago.la/ejemplo12", estado:"activo" },
+    { id:"A-013", n:"Cristóbal Fica Uribe",  t:"56914151617", ini: corteMes(-6),  ven: corteMes(5),  m:men, mensual:men, pagos:6,  link:"https://mpago.la/ejemplo13", estado:"activo" },
+    { id:"A-014", n:"Martina Quezada Roa",   t:"56915161718", ini: corteMes(-9),  ven: corteMes(1),  m:men, mensual:men, pagos:9,  link:"https://mpago.la/ejemplo14", estado:"activo" },
+    { id:"A-015", n:"Tomás Alarcón Bravo",   t:"56916171819", ini: corteMes(-1),  ven: corteMes(1),  m:men, mensual:men, pagos:1,  link:"https://mpago.la/ejemplo15", estado:"activo" },
+    { id:"A-016", n:"Gabriel Uribe Mena",    t:"56917181920", ini: corteMes(-11), ven: corteMes(-3), m:men, mensual:men, pagos:8,  link:"", estado:"baja", motivo:"No pagó", fechaBaja: corteMes(-2), notaBaja:"Dejó de venir y no contestó tres mensajes." },
+    { id:"A-017", n:"Isidora Pino Vera",     t:"56918192021", ini: corteMes(-8),  ven: corteMes(-2), m:men, mensual:men, pagos:6,  link:"", estado:"baja", motivo:"No pagó", fechaBaja: corteMes(-1), notaBaja:"" },
+    { id:"A-018", n:"Renato Salas Kim",      t:"56919202122", ini: corteMes(-15), ven: corteMes(-1), m:men, mensual:men, pagos:13, link:"", estado:"baja", motivo:"Lesión", fechaBaja: corteMes(-1), notaBaja:"Se rompió la mano, vuelve en dos meses." }
+  ];
+  const hace = n => iso(new Date(HOY.getFullYear(), HOY.getMonth(), HOY.getDate() - n));
+  const pagos = [
+    { id:"A-012", n:"Josefa Riquelme Sáez", f: hace(1), m:men, e:"approved", h: corteMes(1), via:"mp" },
+    { id:"A-003", n:"Valentina Águila Paz", f: hace(1), m:men, e:"approved", h: corteMes(1), via:"efectivo" },
+    { id:"A-015", n:"Tomás Alarcón Bravo",  f: hace(2), m:men, e:"approved", h: corteMes(1), via:"mp" },
+    { id:"A-001", n:"Camila Fuentes Rojas", f: hace(2), m:men, e:"approved", h: corteMes(1), via:"transferencia" },
+    { id:"A-008", n:"Ignacio Vera Godoy",   f: hace(3), m:men, e:"rejected",  h:"",           via:"mp" },
+    { id:"A-013", n:"Cristóbal Fica Uribe", f: hace(3), m: men * 5, e:"approved", h: corteMes(5), via:"canje", que:"Una ingleteadora", meses:5 },
+    { id:"A-002", n:"Matías Soto Herrera",  f: hace(4), m:men, e:"approved", h: corteMes(1), via:"mp" },
+    { id:"A-014", n:"Martina Quezada Roa",  f: hace(4), m:men, e:"approved", h: corteMes(1), via:"efectivo" },
+    { id:"A-010", n:"Benjamín Torres Silva",f: hace(5), m:men, e:"approved", h: corteMes(1), via:"mp" },
+    { id:"A-011", n:"Paula Ojeda Cortés",   f: hace(6), m:men, e:"approved", h: corteMes(1), via:"transferencia" }
+  ];
+  if (prNuevo) pagos.unshift({ id:"A-005", n:"Antonia Miranda Ruiz", f: entro, m: prNuevo.monto, e:"approved", h: prNuevo.hasta, via:"efectivo" });
+
+  // Reparte planes, días fijos y edades para que la demostración se parezca a un gimnasio de verdad.
+  const combos = {
+    3: [["lun","mie","vie"], ["mar","jue","sab"], ["lun","mie","vie"], ["mar","jue","sab"]],
+    2: [["lun","mie"], ["mar","jue"], ["mie","vie"], ["lun","jue"]]
+  };
+  const precios = {};
+  alumnos.forEach((a, i) => {
+    const p = planes()[i % 3 === 0 ? 1 : 0];
+    const combo = combos[p.dias] || combos[2];
+    a.plan = p.id;
+    a.mensual = p.precio;
+    a.dias = combo[i % combo.length].slice();
+    a.nace = iso(new Date(HOY.getFullYear() - (16 + (i * 3) % 26), (i * 5) % 12, 1 + (i * 7) % 27));
+    if (a.m === men) a.m = p.precio;
+    precios[a.id] = p.precio;
+  });
+  pagos.forEach(pg => {
+    if (!precios[pg.id]) return;
+    if (pg.via === "canje") pg.m = precios[pg.id] * (Number(pg.meses) || 1);
+    else if (pg.m === men) pg.m = precios[pg.id];
+  });
+
+  return { alumnos: alumnos, pagos: pagos };
+}
+
+function cargarDatos(primera) {
+  if (!CFG.servidor) {
+    MODO = "demo";
+    ULTIMO_ERROR = "";
+    const g = datosDemo();
+    ALUMNOS = g.alumnos; PAGOS = g.pagos;
+    pintarTodo();
+    return;
+  }
+  fetch(CFG.servidor + "/webhook/gym-datos" + (CFG.clave ? "?clave=" + encodeURIComponent(CFG.clave) : ""), { cache: "no-store" })
+    .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then(data => {
+      if (!Array.isArray(data.alumnos)) throw new Error("respuesta sin lista de alumnos");
+      MODO = "vivo"; ULTIMO_ERROR = "";
+      ALUMNOS = data.alumnos;
+      PAGOS = Array.isArray(data.pagos) ? data.pagos : [];
+      pintarTodo();
+      cargarFirmas();
+    })
+    .catch(e => {
+      ULTIMO_ERROR = primera || !ALUMNOS.length
+        ? "No se pudieron cargar los datos (" + e.message + "). Revisa el servidor en ⚙︎ y que los flujos estén activos en n8n."
+        : "Ojo: lo que ves es de hace un rato. La última actualización falló (" + e.message + ").";
+      if (primera && !ALUMNOS.length) { MODO = "vacio"; ALUMNOS = []; PAGOS = []; }
+      pintarTodo();
+    });
+}
+
+/* ---------- eventos ---------- */
+
+document.addEventListener("click", e => {
+  const av = e.target.closest("[data-avisar]");
+  if (av) { marcarAvisado(av.dataset.avisar); setTimeout(pintarAtencion, 300); return; }
+  const acc = e.target.closest("[data-accion]");
+  if (acc) {
+    const id = acc.dataset.id;
+    switch (acc.dataset.accion) {
+      case "editar": abrirAlumno(id); break;
+      case "baja": abrirBaja(id); break;
+      case "pago": abrirPago(id); break;
+      case "reactivar":
+        aplicar("reactivar", { id: id }, () => { cerrarFicha(); toast("Volvió a quedar activo"); });
+        break;
+      case "borrar":
+        abrirModal(`
+          <button class="x" id="modalX" aria-label="Cerrar">&times;</button>
+          <h3>Borrar para siempre</h3>
+          <div class="previo" style="background:var(--bad-bg);border-color:color-mix(in srgb, var(--bad) 30%, transparent)">
+            <span>Se va de la lista con todo su historial y no se puede deshacer. Si solo dejó de venir, <b>dado de baja</b> es mejor: conservas el registro.</span>
+          </div>
+          <div class="pie"><button class="btn" id="modalCancelar">Mejor no</button><button class="btn peligro" id="modalOk">Borrar</button></div>`, () => {
+          document.getElementById("modalOk").onclick = () => {
+            aplicar("borrar", { id: id }, () => { cerrarModal(); cerrarFicha(); toast("Borrado"); });
+          };
+        });
+        break;
+      case "copiar": {
+        const a = enriquecidos.find(x => x.id === id);
+        if (a) navigator.clipboard.writeText(mensajeCobro(a)).then(() => toast("Mensaje copiado")).catch(() => toast("No se pudo copiar"));
+        break;
+      }
+    }
+    return;
+  }
+  const t = e.target.closest("[data-filtro]");
+  if (t) {
+    filtro = t.dataset.filtro; busca = ""; document.getElementById("q").value = "";
+    document.querySelectorAll(".btn[data-filtro]").forEach(b => b.classList.toggle("on", b.dataset.filtro === filtro));
+    pintarTiles(); pintarTabla();
+    return;
+  }
+  const th = e.target.closest("thead th[data-sort]");
+  if (th) {
+    const c = th.dataset.sort;
+    orden = { campo: c, asc: orden.campo === c ? !orden.asc : true };
+    pintarTabla();
+    return;
+  }
+  const fila = e.target.closest("[data-id]");
+  if (fila && !e.target.closest("#drawer") && !e.target.closest("#modal")) { abrirFicha(fila.dataset.id); return; }
+});
+
+document.getElementById("scrim").onclick = () => { cerrarModal(); cerrarFicha(); };
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if (document.getElementById("modalCaja").classList.contains("open")) cerrarModal();
+    else cerrarFicha();
+  }
+});
+document.getElementById("q").addEventListener("input", e => { busca = e.target.value.trim(); pintarTabla(); });
+document.getElementById("btnNuevo").onclick = () => abrirAlumno(null);
+document.getElementById("btnPago").onclick = () => abrirPago(null);
+document.getElementById("btnConfig").onclick = abrirConfig;
+
+document.getElementById("csv").onclick = () => {
+  const lista = enriquecidos.filter(pasa);
+  if (!lista.length) { toast("No hay nada que descargar"); return; }
+  const filas = [["ID","Nombre","Telefono","Edad","Plan","Dias","Estado","Vence","Paga al mes","Cobro actual","Debe ahora","Socio desde","Cuotas","Total pagado","Motivo de baja","Fecha de baja"]]
+    .concat(lista.map(a => [a.id, a.n, a.t || "", a.edad === null ? "" : a.edad, nombrePlan(a.plan), listaDias(a.dias).join(" "), a.est.txt, a.ven || "", a.mensual, a.m, a.debe, a.ini || "", a.pagos, a.totalPagado, a.motivo || "", a.fechaBaja || ""]));
+  const csv = filas.map(f => f.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(";")).join("\r\n");
+  const url = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = "alumnos-gimnasio.csv"; a.click();
+  URL.revokeObjectURL(url); toast("CSV descargado");
+};
+
+cargarDatos(true);
+setInterval(() => { if (CFG.servidor) cargarDatos(false); }, 60000);
+</script>
