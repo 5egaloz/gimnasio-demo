@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="es">
 <meta charset="utf-8">
-<title>Panel del Gimnasio</title>
+<title>Herencia de Leones</title>
 <meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -414,7 +414,7 @@
   <div class="cuerdas" aria-hidden="true"><i></i><i></i><i></i></div>
   <header>
     <div>
-      <h1 id="titulo">Panel del Gimnasio</h1>
+      <h1 id="titulo">Herencia de Leones</h1>
       <p class="sub">Alumnos, plata y cobranza — en un solo lugar.</p>
     </div>
     <div class="cabecera-acciones">
@@ -519,7 +519,7 @@
 /* ---------- configuración ---------- */
 
 const CFG_DEF = {
-  gym: "Panel del Gimnasio",
+  gym: "Herencia de Leones",
   mensualidad: 40000,
   corte: 10,
   servidor: "",
@@ -946,8 +946,8 @@ function pintarPagos() {
 }
 
 function pintarTodo() {
-  document.getElementById("titulo").textContent = CFG.gym || "Panel del Gimnasio";
-  document.title = CFG.gym || "Panel del Gimnasio";
+  document.getElementById("titulo").textContent = CFG.gym || CFG_DEF.gym;
+  document.title = CFG.gym || CFG_DEF.gym;
   calcular();
   pintarAvisos(); pintarCaja(); pintarTiles(); pintarAtencion();
   pintarSemana(); pintarProrrateos(); pintarTabla(); pintarBajas(); pintarPagos(); pintarAvisosAuto();
@@ -986,7 +986,7 @@ function mensajeCobro(a) {
 /* ---------- link "Mi cuota" de cada alumno ---------- */
 
 let FIRMAS = {};
-const DEMO_TRANSFER = { nombre: "Gimnasio de Boxeo SpA", rut: "77.123.456-7", banco: "BancoEstado", tipo: "Cuenta RUT", cuenta: "12345678", correo: "pagos@gimnasio.cl" };
+const DEMO_TRANSFER = { nombre: "Herencia de Leones", rut: "77.123.456-7", banco: "BancoEstado", tipo: "Cuenta RUT", cuenta: "12345678", correo: "pagos@gimnasio.cl" };
 
 function b64url(texto) {
   const bytes = new TextEncoder().encode(texto);
@@ -999,7 +999,7 @@ function linkCuota(a) {
   if (MODO === "vivo") return FIRMAS[a.id] ? base + "?a=" + encodeURIComponent(a.id) + "&k=" + FIRMAS[a.id] : "";
   // En la demostración los datos viajan dentro del link: no toca ningún servidor.
   const datos = {
-    gym: CFG.gym && CFG.gym !== CFG_DEF.gym ? CFG.gym : "Gimnasio de Boxeo", wa: "", transferencia: DEMO_TRANSFER,
+    gym: CFG.gym || CFG_DEF.gym, wa: "", transferencia: DEMO_TRANSFER,
     alumno: { n: a.n, ven: a.ven, m: a.m, mensual: a.mensual, plan: a.plan, dias: a.dias, link: a.link },
     pagos: PAGOS.filter(p => p.id === a.id && p.e === "approved").map(p => ({ f: p.f, m: p.m, via: p.via, hasta: p.h }))
   };
@@ -1126,7 +1126,7 @@ function htmlGlobo(msg) {
   });
 }
 function chat(msg, hora) {
-  const gym = CFG.gym && CFG.gym !== CFG_DEF.gym ? CFG.gym : "Gimnasio";
+  const gym = CFG.gym || CFG_DEF.gym;
   return `<div class="chat"><div class="chat-cab"><span class="av" aria-hidden="true">${esc(gym.trim()[0] || "G")}</span><span><b>${esc(gym)}</b><small>en línea</small></span></div>
     <div class="chat-cuerpo"><div class="globo">${htmlGlobo(msg)}<span class="hora">${hora || "09:00"}</span></div></div></div>`;
 }

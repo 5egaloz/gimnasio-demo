@@ -526,8 +526,8 @@ function ejemplo(caso) {
   const iso = x => x.getFullYear() + "-" + String(x.getMonth()+1).padStart(2,"0") + "-" + String(x.getDate()).padStart(2,"0");
   const atras = n => { const x = new Date(ven); x.setMonth(x.getMonth() - n); return iso(x); };
   return {
-    caso, gym: "Gimnasio de Boxeo", wa: "56900000000",
-    transferencia: { nombre: "Gimnasio de Boxeo SpA", rut: "77.123.456-7", banco: "BancoEstado", tipo: "Cuenta RUT", cuenta: "12345678", correo: "pagos@gimnasio.cl" },
+    caso, gym: "Herencia de Leones", wa: "56900000000",
+    transferencia: { nombre: "Herencia de Leones", rut: "77.123.456-7", banco: "BancoEstado", tipo: "Cuenta RUT", cuenta: "12345678", correo: "pagos@gimnasio.cl" },
     alumno: { n: "Diego Cárcamo", ven: iso(ven), m: 40000, mensual: 40000, plan: "p3", dias: ["lun","mie","vie"], link: "https://mpago.la/ejemplo" },
     pagos: [{ f: atras(1), m: 40000, via: "transferencia", hasta: iso(ven) }, { f: atras(2), m: 40000, via: "efectivo", hasta: atras(1) }]
   };
