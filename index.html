@@ -944,8 +944,8 @@ function mensajeCobro(a) {
   else if (k === 1) l = ["Hola " + nombre + " 👊", "Mañana, " + fechaHumana(a.ven) + ", vence tu membresía. Si no está pagada, mañana ya no vas a poder entrar al gimnasio. Son " + monto + ".", pagar, "Si ya pagaste, no le hagas caso a este mensaje."];
   else if (k > 0) l = ["Hola " + nombre + " 👊", "Te aviso con tiempo: tu membresía vence el " + fechaHumana(a.ven) + ", en " + plural(k, "día", "días") + ". Son " + monto + ".", pagar];
   else if (k === 0) l = ["Hola " + nombre + " 👊", "Hoy vence tu membresía (" + monto + "). Hasta que esté pagada no puedes entrar al gimnasio.", pagar];
-  else if (k >= -6) l = ["Hola " + nombre + " 👊", "Se te pasó la mensualidad: venció el " + fechaHumana(a.ven) + ". Son " + monto + cuantos + ".", pagar, "Si ya pagaste, no le hagas caso a este mensaje."];
-  else l = ["Hola " + nombre, "Llevas " + plural(-k, "día", "días") + " con la mensualidad atrasada (" + monto + cuantos + ").", pagar,
+  else if (k >= -6) l = ["Hola " + nombre + " 👊", "Se te pasó la mensualidad: venció el " + fechaHumana(a.ven) + ". Son " + monto + cuantos + ". Mientras no esté pagada, ya no podrás ingresar a tu próxima clase.", pagar, "Si ya pagaste, no le hagas caso a este mensaje."];
+  else l = ["Hola " + nombre, "Llevas " + plural(-k, "día", "días") + " con la mensualidad atrasada (" + monto + cuantos + "). Mientras no esté pagada, ya no podrás ingresar a tu próxima clase.", pagar,
     "Si estás complicado este mes, dime y lo vemos. Necesito saber de ti esta semana para guardarte tus días."];
   return l.join("\n\n");
 }
@@ -997,8 +997,8 @@ function textoAvisado(a) {
   return h === null ? "" : h === 0 ? "avisado hoy" : h === 1 ? "avisado ayer" : "avisado hace " + h + " días";
 }
 // La misma regla que los avisos automáticos de las 09:00 (_worker.js → tocaAvisar):
-// 5 días antes, 1 día antes ("mañana ya no entras"), después día por medio y pasadas dos semanas,
-// una vez por semana. Y a quien ya se le escribió hoy, no se le repite.
+// 5 días antes, 1 día antes ("mañana ya no entras") y después día por medio hasta que pague,
+// Y a quien ya se le escribió hoy, no se le repite.
 function tocaHoy(a) {
   if (a.baja || a.sinTelefono) return false;
   if (avisadoHace(a) === 0) return false;
@@ -1006,8 +1006,7 @@ function tocaHoy(a) {
   const k = a.est.dias;
   if (k === null || k > 5) return false;
   if (k === 5 || k === 1) return true;
-  if (k < 0 && k >= -14) return k % 2 === 0;
-  return k < -14 && k % 7 === 0;
+  return k < 0 && k % 2 === 0;
 }
 
 function abrirRonda() {

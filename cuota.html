@@ -339,7 +339,7 @@ function leer(d) {
   const meses = 1 + Math.floor(Math.abs(k) / 30);
   return {
     cls: "atrasado", num: Math.abs(k), que: Math.abs(k) === 1 ? "Día de atraso" : "Días de atraso",
-    sub: "Venció el " + largo(a.ven) + (meses > 1 ? ". Son " + plural(meses, "mes", "meses") + "." : "."),
+    sub: "Venció el " + largo(a.ven) + (meses > 1 ? ". Son " + plural(meses, "mes", "meses") : "") + ". Mientras no esté pagado, ya no podrás ingresar a tu próxima clase.",
     debe: meses * monto, paga: true, atrasado: true, meses: meses
   };
 }
