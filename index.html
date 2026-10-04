@@ -364,6 +364,34 @@
   }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
+  /* ---------- los avisos automáticos, vistos en el celular del alumno ---------- */
+  .auto { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .auto-col { display: flex; flex-direction: column; gap: 8px; }
+  .auto-cuando { display: flex; align-items: baseline; gap: 8px; font-family: var(--display); text-transform: uppercase; }
+  .auto-cuando b { font-size: 22px; font-weight: 900; }
+  .auto-cuando span { font-size: 15px; font-weight: 700; color: var(--ink-soft); }
+  .chat { flex: 1; border-radius: 8px; overflow: hidden; background: #e9e2d8; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+  .chat-cab { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #0b5c4a; color: #fff; }
+  .chat-cab .av { flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--lona); display: grid; place-items: center; font-family: var(--display); font-weight: 900; font-size: 16px; }
+  .chat-cab b { display: block; font-size: 14.5px; font-weight: 600; line-height: 1.2; }
+  .chat-cab small { font-size: 12px; opacity: .8; }
+  .chat-cuerpo { flex: 1; padding: 12px; }
+  .globo {
+    position: relative; max-width: 94%; background: #fff; color: #111418; border-radius: 0 8px 8px 8px;
+    padding: 8px 10px 20px; font-size: 14px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere;
+    box-shadow: 0 1px 0 rgba(0,0,0,.12);
+  }
+  .globo a { color: #027eb5; }
+  .globo .hora { position: absolute; right: 8px; bottom: 4px; font-size: 11px; color: #667781; }
+  .auto-nota { margin: 10px 0 0; font-size: 14px; color: var(--ink-soft); }
+
+  .celular-capa { position: fixed; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(6, 14, 22, .86); }
+  .celular-capa.open { display: flex; }
+  .celular { width: min(360px, 100%); max-height: 92vh; display: flex; flex-direction: column; gap: 10px; }
+  .celular .chat { border: 8px solid #111418; border-radius: 26px; min-height: 420px; max-height: 76vh; }
+  .celular .chat-cuerpo { overflow-y: auto; }
+  .celular p { margin: 0; color: #fff; font-size: 14.5px; text-align: center; }
+  .celular .btn { align-self: center; }
   footer { border-top: 2px solid var(--ink); padding-top: 14px; font-size: 14px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 4px; }
   footer b { color: var(--ink-mid); font-weight: 700; }
   a { color: var(--lona); }
@@ -470,6 +498,8 @@
     </div>
   </section>
 
+  <section id="avisosAuto"></section>
+
   <footer>
     <span>Los avisos de cobro salen solos a las <b>09:00</b> por WhatsApp, a cada uno por interno: <b>5 días antes</b> de que venza la membresía, <b>1 día antes</b> (mañana ya no puede entrar) y, si no paga, día por medio hasta que pague.</span>
     <span>Cuando el pago por Mercado Pago se acredita, la membresía se renueva sola: <b>nadie revisa la cartola</b>. Los pagos en efectivo se registran acá con el botón <b>Registrar pago</b>.</span>
@@ -481,6 +511,7 @@
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Ficha del alumno"></aside>
 <div class="modal-caja" id="modalCaja"><div class="modal" id="modal" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast"></div>
+<div class="celular-capa" id="celular" role="dialog" aria-modal="true" aria-label="Así le llega el mensaje"></div>
 
 <script>
 "use strict";
@@ -677,7 +708,9 @@ function pintarAvisos() {
   const box = document.getElementById("avisos");
   let h = "";
   if (MODO === "demo") {
-    h += `<div class="aviso demo"><span class="crece"><b>Modo demostración.</b> Los alumnos y pagos son inventados y todo lo que hagas se guarda solo en este navegador. Conecta el servidor en ⚙︎ para trabajar con los datos de verdad.</span><button class="btn" id="btnConectar">Conectar servidor</button></div>`;
+    const publica = location.hostname.endsWith("github.io");
+    h += `<div class="aviso demo"><span class="crece"><b>Esto es una demostración con alumnos inventados.</b> Pruébalo sin miedo: toca un alumno, registra un pago o aprieta <b>Avisar</b> para ver el mensaje que le llega. Nada de esto toca datos reales.</span>
+      <a class="btn fuerte" href="${esc(linkEjemploCuota())}" target="_blank" rel="noopener">Ver lo que recibe el alumno</a>${publica ? "" : `<button class="btn" id="btnConectar">Conectar servidor</button>`}</div>`;
   }
   if (ULTIMO_ERROR) {
     h += `<div class="aviso error">${esc(ULTIMO_ERROR)}</div>`;
@@ -917,7 +950,7 @@ function pintarTodo() {
   document.title = CFG.gym || "Panel del Gimnasio";
   calcular();
   pintarAvisos(); pintarCaja(); pintarTiles(); pintarAtencion();
-  pintarSemana(); pintarProrrateos(); pintarTabla(); pintarBajas(); pintarPagos();
+  pintarSemana(); pintarProrrateos(); pintarTabla(); pintarBajas(); pintarPagos(); pintarAvisosAuto();
   const a = new Date();
   document.getElementById("clock").textContent = DIAS_SEM[HOY.getDay()] + " " + fmt(iso(HOY)) + " · " +
     String(a.getHours()).padStart(2,"0") + ":" + String(a.getMinutes()).padStart(2,"0");
@@ -1082,6 +1115,70 @@ function mensajeBienvenida(a, pr) {
 }
 
 function whatsapp(t, msg) { return "https://wa.me/" + telNormal(t) + "?text=" + encodeURIComponent(msg); }
+
+/* ---------- los avisos automáticos, como los ve el alumno ---------- */
+
+function htmlGlobo(msg) {
+  // El link se muestra corto, como lo deja WhatsApp: dominio y ruta, sin los datos de atrás.
+  return esc(msg).replace(/(?:https?|file):\/\/[^\s<]+/g, u => {
+    const corto = u.replace(/^\w+:\/+/, "").split(/[?#]/)[0].replace(/^.*\/(?=[^/]+\/cuota)/, "");
+    return `<a href="${u}" target="_blank" rel="noopener">${esc(corto)}…</a>`;
+  });
+}
+function chat(msg, hora) {
+  const gym = CFG.gym && CFG.gym !== CFG_DEF.gym ? CFG.gym : "Gimnasio";
+  return `<div class="chat"><div class="chat-cab"><span class="av" aria-hidden="true">${esc(gym.trim()[0] || "G")}</span><span><b>${esc(gym)}</b><small>en línea</small></span></div>
+    <div class="chat-cuerpo"><div class="globo">${htmlGlobo(msg)}<span class="hora">${hora || "09:00"}</span></div></div></div>`;
+}
+// Un alumno de muestra, en el estado que se quiera, para armar el mensaje real.
+function comoSiFaltaran(a, k) {
+  const ven = new Date(HOY); ven.setDate(ven.getDate() + k);
+  return Object.assign({}, a, { ven: iso(ven), debe: a.m, ciclosDebe: 1,
+    est: { k: k < 0 ? "vencido" : "porvencer", dias: k, cls: k < 0 ? "bad" : "warn" } });
+}
+function pintarAvisosAuto() {
+  const el = document.getElementById("avisosAuto");
+  const base = activos().find(a => !a.sinTelefono && a.m > 0);
+  if (!base) { el.innerHTML = ""; return; }
+  const nombre = base.n.split(" ")[0];
+  const casos = [[5, "5 días antes", "a las 09:00"], [1, "1 día antes", "mañana ya no entra"], [-2, "Si se atrasa", "día por medio"]];
+  el.innerHTML = `<h2>Lo que sale solo por WhatsApp <span class="normal">así le llegan los avisos a ${esc(nombre)}, a cada uno por interno</span></h2>
+    <div class="auto">${casos.map(([k, t, n]) => `<div class="auto-col">
+      <div class="auto-cuando"><b>${t}</b><span>${n}</span></div>${chat(mensajeCobro(comoSiFaltaran(base, k)))}</div>`).join("")}</div>
+    <p class="auto-nota">Apenas paga, dejan de llegarle. Nadie del gimnasio tiene que acordarse ni escribir nada.</p>`;
+}
+
+// En la demostración, WhatsApp no se abre: se muestra el celular del alumno con el mensaje.
+function verEnCelular(href) {
+  const m = /[?&]text=([^&]*)/.exec(href);
+  const msg = m ? decodeURIComponent(m[1]) : "";
+  const a = new Date();
+  const capa = document.getElementById("celular");
+  capa.innerHTML = `<div class="celular">${chat(msg, String(a.getHours()).padStart(2, "0") + ":" + String(a.getMinutes()).padStart(2, "0"))}
+    <p>Así le llega. En la versión real se abre tu WhatsApp con el mensaje listo, o sale solo a las 09:00.</p>
+    <button class="btn fuerte" id="celularOk">Entendido</button></div>`;
+  capa.classList.add("open");
+  const cerrar = () => capa.classList.remove("open");
+  document.getElementById("celularOk").onclick = cerrar;
+  capa.onclick = e => { if (e.target === capa) cerrar(); };
+  document.getElementById("celularOk").focus();
+}
+function abrirWhatsapp(href) {
+  if (MODO === "demo") verEnCelular(href); else window.open(href, "_blank", "noopener");
+}
+document.addEventListener("click", e => {
+  const l = e.target.closest('a[href^="https://wa.me/"]');
+  if (!l || MODO !== "demo") return;
+  e.preventDefault();
+  verEnCelular(l.href);
+}, true);
+document.addEventListener("keydown", e => { if (e.key === "Escape") document.getElementById("celular").classList.remove("open"); });
+
+// Un Mi cuota de ejemplo con el primer alumno que debe, para mostrar desde el aviso.
+function linkEjemploCuota() {
+  const a = activos().find(x => x.est.k === "porvencer") || activos()[0];
+  return a ? linkCuota(a) : "cuota.html";
+}
 
 /* ---------- toast ---------- */
 
@@ -1323,7 +1420,7 @@ function abrirAlumno(id) {
           const msg = mensajeBienvenida(nuevo, pr);
           if (t) {
             toast("Alumno creado — abriendo su WhatsApp");
-            window.open(whatsapp(t, msg), "_blank", "noopener");
+            abrirWhatsapp(whatsapp(t, msg));
           } else {
             toast("Alumno creado");
           }
